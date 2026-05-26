@@ -1,3 +1,4 @@
+// LOADING PAGE
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +8,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Jersey+15&display=swap" rel="stylesheet">
-
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -28,15 +28,13 @@
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
       font-family: 'Jersey 15', monospace;
-      font-size: 32px;
+      font-size: 64px;
       color: rgb(153, 148, 54);
       letter-spacing: 2px;
       pointer-events: none;
       z-index: 10;
     }
   </style>
-
-  
 </head>
 <body>
   <canvas id="c"></canvas>
@@ -67,7 +65,7 @@
     const ctx = canvas.getContext("2d");
     ctx.imageSmoothingEnabled = false;
 
-    const BACKGROUND_DUST_DENSITY = 3500;
+    const BACKGROUND_DUST_DENSITY = 7000;
     let dustParticlesBg = [];
     let frameCount = 0;
     let width, height;
@@ -86,15 +84,15 @@
 
     function setupDustParticlesBg() {
       dustParticlesBg = [];
-      const total = Math.max(140, Math.floor((width * height) / BACKGROUND_DUST_DENSITY));
+      const total = Math.max(80, Math.floor((width * height) / BACKGROUND_DUST_DENSITY));
       for (let i = 0; i < total; i++) {
         const sizeRoll = random();
         const size =
-          sizeRoll < 0.62 ? 1.5 :
-          sizeRoll < 0.88 ? 3.5 :
-          random(2, 4);
+          sizeRoll < 0.62 ? 3 :
+          sizeRoll < 0.88 ? 7 :
+          random(4, 8);
         const driftAngle = random(Math.PI * 2);
-        const driftSpeed = 0.2 - (size - 1) / (3.4 - 1) * (0.2 - 0.08);
+        const driftSpeed = 0.12 - (size - 2) / (8 - 2) * (0.12 - 0.05);
         dustParticlesBg.push({
           x: random(width), y: random(height),
           renderX: 0, renderY: 0,
@@ -104,11 +102,11 @@
           driftAngle,  driftHeading: driftAngle, driftSpeed,
           vx: Math.cos(driftAngle) * driftSpeed,
           vy: Math.sin(driftAngle) * driftSpeed,
-          turnOffset:  random(1000), turnSpeed: random(0.001, 0.0022),
+          turnOffset:  random(1000), turnSpeed: random(0.0005, 0.0015),
           swayPhaseX:  random(Math.PI * 2), swayPhaseY: random(Math.PI * 2),
-          swaySpeedX:  random(0.01, 0.03),  swaySpeedY: random(0.01, 0.03),
-          swayRadiusX: random(0.3, 1.8),    swayRadiusY: random(0.6, 2.8),
-          alphaPhase:  random(Math.PI * 2), alphaSpeed: random(0.004, 0.012)
+          swaySpeedX:  random(0.006, 0.018),  swaySpeedY: random(0.006, 0.018),
+          swayRadiusX: random(0.2, 0.8),    swayRadiusY: random(0.3, 1.2),
+          alphaPhase:  random(Math.PI * 2), alphaSpeed: random(0.002, 0.006)
         });
       }
     }
@@ -116,11 +114,12 @@
     function updateDustParticlesBg() {
       const t = frameCount;
       for (let p of dustParticlesBg) {
-        const n = Math.abs(Math.sin(p.turnOffset * 127.1 + t * p.turnSpeed * 311.7) * 43758.5453 % 1);
+        const nVal = (Math.sin(p.turnOffset * 127.1 + t * p.turnSpeed * 311.7) * 43758.5453) % 1;
+        const n = Math.abs(nVal);
         const targetAngle = p.driftAngle + (n * 2 - 1) * 0.9;
-        p.driftHeading = lerpAngle(p.driftHeading, targetAngle, 0.04);
-        p.vx = p.vx * 0.91 + Math.cos(p.driftHeading) * p.driftSpeed * 0.09;
-        p.vy = p.vy * 0.91 + Math.sin(p.driftHeading) * p.driftSpeed * 0.09;
+        p.driftHeading = lerpAngle(p.driftHeading, targetAngle, 0.02);
+        p.vx = p.vx * 0.94 + Math.cos(p.driftHeading) * p.driftSpeed * 0.06;
+        p.vy = p.vy * 0.94 + Math.sin(p.driftHeading) * p.driftSpeed * 0.06;
         p.x += p.vx;
         p.y += p.vy;
         p.renderX = p.x + Math.sin(t * p.swaySpeedX + p.swayPhaseX) * p.swayRadiusX;
@@ -158,7 +157,6 @@
     window.addEventListener("resize", resizeCanvas);
     resizeCanvas();
 
-    //LOOP TEXT
     function typeStep(now) {
       ctx.fillStyle = "rgb(252,235,222)";
       ctx.fillRect(0, 0, width, height);
