@@ -2,59 +2,50 @@
 
 // PHẦN 1: CONST / LET
 // MUSIC
-// lưu/đọc nhạc khi chuyển trang
-const MUSIC_KEY       = "bgMusicTime";     // lưu thời điểm đang phát
-const MUSIC_MUTED_KEY = "bgMusicMuted";    // lưu mute
+const MUSIC_KEY       = "bgMusicTime";
+const MUSIC_MUTED_KEY = "bgMusicMuted";
 
-let musicCtx       = null;   // Web Audio context
-let musicBuffer    = null;   // dữ liệu file nhạc đã decode
-let musicSource    = null;   // nguồn phát nhạc
-let musicStartTime = 0;      
-let musicOffset    = 0;      
-let musicReady     = false;  
-let musicStarted   = false;  
-let gainNode       = null;   // điều chỉnh âm lượng
-let isMuted        = false;  // tắt tiếng
+let musicCtx       = null;
+let musicBuffer    = null;
+let musicSource    = null;
+let musicStartTime = 0;
+let musicOffset    = 0;
+let musicReady     = false;
+let musicStarted   = false;
+let gainNode       = null;
+let isMuted        = false;
 
 
 // BACKGROUND DUST 
-const BACKGROUND_DUST_DENSITY = 3500; 
+const BACKGROUND_DUST_DENSITY = 7000; 
 
 let dustParticlesBg = [];
 
 
 // LANDING PAGE 
-// First screen: "QUEN QUEN" 
 const LANDING_TITLE      = "QUEN QUEN";                           
 const LANDING_HEADPHONES = "Headphones on for the best experience"; 
 
-// Tốc độ gõ chữ 
 const TITLE_TYPING_SPEED       = 300; 
 const HEADPHONES_TYPING_SPEED  = 80;  
 
-// Nút START 
-const START_BUT_SIZE = 25;
+const START_BUT_SIZE = 60;
 
-// Chuyển màn
-const TRANSITION_DURATION = 950; // thời gian landing → orbitals
+const TRANSITION_DURATION = 950;
 
-// Landing state lưu gõ chữ + fade in nút START
-let landingState;               // object lưu gõ chữ + nút landing
+let landingState;
 let transitionState = null;    
 let currentScreen   = "landing"; 
 
 
 // GUIDE TEXT
-
 const GUIDE_TEXT_1 = "move your mouse to break the spheres";      
 const GUIDE_TEXT_2 = "drag the bar and let the memories scatter"; 
 
-// Timing
 const GUIDE_TYPING_SPEED        = 70; 
-const GUIDE_1_DELAY             = 1;   // ms chờ 
-const MAIN_TEXT_DELAY_AFTER_GUIDE = 100; // ms sau guide 1
+const GUIDE_1_DELAY             = 1;
+const MAIN_TEXT_DELAY_AFTER_GUIDE = 100;
 
-// State guide typing
 let guideState = {
   charCount:       0,    
   lastType:        0,    
@@ -68,7 +59,6 @@ let guideState = {
   phase2Trigger:   null  
 };
 
-// State flicker 
 let guideFlicker = {
   indices:      [],    
   nextFlicker:  0,     
@@ -79,7 +69,7 @@ let mainTextAllowed = false;
 
 
 // SPHERES 
-const CAMERA_DISTANCE = 250; // khoảng cách camera
+const CAMERA_DISTANCE = 300;
 const wordsSphere = [
   ["F","A","T","E"],
   ["T","R","A","C","E"],
@@ -88,7 +78,6 @@ const wordsSphere = [
   ["B","O","N","D"]
 ];
 
-// Màu
 const sphereColors = [
   [224, 98, 36], 
   [142, 171, 58], 
@@ -98,25 +87,23 @@ const sphereColors = [
 ];
 let spheres     = [];    
 let morphRatio  = 0;     
-let barValue    = 0;     // thanh kéo
-let barDragging = false; // có đang kéo thanh hay không
+let barValue    = 0;     
+let barDragging = false;
 let slider;           
 
 
-// MAIN BOX — MAIN TEXT
+// MAIN BOX
 const MAIN_TEXT_MESSAGES = [
   "\u201cFATE\u201d, \u201cTRACE\u201d, \u201cLOSE\u201d, \u201cLINGER\u201d, and \u201cBOND\u201d are the elements that form the emotional cycle of a relationship...",
   "From the moment people meet until they drift apart, those elements still remain...",
   "Even the connections that seem to have ended continue to exist in quieter ways...",
 ];
 
-// Timing main text 
 const MAIN_TEXT_TYPING_SPEED = 55;   
 const MAIN_TEXT_DELAY        = 2000; 
 const FINAL_MAIN_TEXT_DELAY  = 8000; 
 const BAR_LEAD_TIME          = 2500; 
 
-// — State main text typing —
 let mainTextTypingState = {
   messageIndex:  0,    
   charCount:     0,    
@@ -127,21 +114,19 @@ let mainTextTypingState = {
 };
 
 
-// BAR (TEXT ↔ PARTICLES)
+// BAR
 const BAR_DELAY = 0;
 
-let barAlpha  = 0;    // độ trong suốt bar 
+let barAlpha  = 0;    
 let barAppear = null; 
 
 
-// MAIN BOX — FINAL MAIN TEXT + NEXT BUT 
+// FINAL MAIN TEXT + NEXT BUT 
 const FINAL_MAIN_TEXT = "And even when forgotten or changed by time, those memories still exist somewhere within us.";
 const NEXT_TEXT       = "NEXT";
 
-// Timing 
 const NEXT_DELAY = 2200; 
 
-// State final text 
 let finalMainTextState = {
   started:       false, 
   charCount:     0,     
@@ -151,19 +136,59 @@ let finalMainTextState = {
   _realFinished: null   
 };
 
-let nextAlpha  = 0;    // độ trong suốt nút NEXT 
+let nextAlpha  = 0;    
 let nextAppear = null; 
 
 
-// UI ICONS (camera + music)
-const ICON_SIZE   = 38; 
-const ICON_MARGIN = 14; 
+// UI ICONS
+const ICON_SIZE   = 60; 
+const ICON_MARGIN = 18; 
 const ICON_TOP    = 16; 
 
 
+// LAYOUT HELPER 
+function getMainBoxLayout() {
+  const BOX_W_FACTOR = 0.95;
+  const TEXT_SIZE    = 37;
+  const LINE_H       = TEXT_SIZE * 1.35; 
+  const PAD_V        = 28;             
+  const NEXT_W       = 190;        
+  const NEXT_H       = 76;              
+  const BAR_W        = 250;
+
+  const boxW      = min(width * BOX_W_FACTOR, 1500);
+  const x         = width / 2 - boxW / 2;
+  const hasNext   = nextAlpha > 0;
+  const textAreaW = hasNext ? boxW - NEXT_W - 68 - 20 : boxW - 68;
+
+  textFont("Jersey 15");
+  textSize(TEXT_SIZE);
+
+  const typed = !finalMainTextState.started
+    ? MAIN_TEXT_MESSAGES[mainTextTypingState.messageIndex].slice(0, mainTextTypingState.charCount)
+    : FINAL_MAIN_TEXT.slice(0, finalMainTextState.charCount);
+
+  const lines = max(1, countMainTextLines(typed, textAreaW));
+  const boxH  = lines * LINE_H + PAD_V * 2;
+  const y     = height - 48 - boxH;
+
+  const nextButX = x + boxW - NEXT_W / 2 - 20;
+  const nextButY = y + boxH / 2;
+
+  const barX = x + boxW - BAR_W;
+  const barY = y - 32; 
+
+  return {
+    boxW, boxH, x, y,
+    textAreaW, typed, TEXT_SIZE, LINE_H, PAD_V,
+    NEXT_W, NEXT_H, BAR_W,
+    nextButX, nextButY,
+    barX, barY, BAR_W
+  };
+}
+
 
 // PHẦN 2: MUSIC
-// Tạo AudioContext và load file nhạc bgS.wav
 function buildMusic() {
   const savedMuted = sessionStorage.getItem(MUSIC_MUTED_KEY);
   if (savedMuted !== null) isMuted = savedMuted === "true";
@@ -176,12 +201,11 @@ function buildMusic() {
     .then(decoded => {
       musicBuffer = decoded;
       musicReady  = true;
-      resumeMusic(); // tiếp tục từ thời điểm session đã lưu
+      resumeMusic();
     })
     .catch(e => console.warn("Music load failed:", e));
 }
 
-// Bắt đầu phát nhạc từ (giây) bất kỳ
 function playMusic(fromOffset) {
   if (!musicReady || !musicCtx) return;
   if (musicSource) { try { musicSource.stop(); } catch(e) {} musicSource = null; }
@@ -202,45 +226,36 @@ function playMusic(fromOffset) {
   musicStarted   = true;
 }
 
-// Trả về vị trí hiện tạitrong bài nhạc
 function getMusicTime() {
   if (!musicStarted || !musicCtx) return 0;
   return (musicOffset + (musicCtx.currentTime - musicStartTime)) % musicBuffer.duration;
 }
 
-// Lưu thời điểm đang phát
 function saveMusicTime() {
   if (musicStarted) sessionStorage.setItem(MUSIC_KEY, getMusicTime().toString());
 }
 
-// Đọc offset đã lưu trong session và tiếp tục phát
 function resumeMusic() {
-  const isNavigating = sessionStorage.getItem("isNavigating") === "true";
+  const isNavigating    = sessionStorage.getItem("isNavigating")    === "true";
   const returnToLanding = sessionStorage.getItem("returnToLanding") === "true";
   sessionStorage.removeItem("isNavigating");
   sessionStorage.removeItem("returnToLanding");
   if (returnToLanding) return;
-  let offset = 0;
-  if (isNavigating) {
-    const saved = sessionStorage.getItem(MUSIC_KEY);
-    offset = saved ? parseFloat(saved) : 0;
-  }
-  playMusic(offset);
+  if (!isNavigating) return;
+  const saved = sessionStorage.getItem(MUSIC_KEY);
+  playMusic(saved ? parseFloat(saved) : 0);
 }
 
-// Bật /tắt tiếng — cập nhật gainNode ngay lập tức
 function setMusicMute(muted) {
   isMuted = muted;
   sessionStorage.setItem(MUSIC_MUTED_KEY, muted.toString());
   if (gainNode) gainNode.gain.setTargetAtTime(muted ? 0 : 1, musicCtx.currentTime, 0.05);
 }
 
-// Tự động lưu nhạc
 window.addEventListener("beforeunload", saveMusicTime);
 
 
 // PHẦN 3: PAGE TRANSITION OVERLAY
-// Inject CSS + tạo div overlay vào DOM 
 function setupTransitionCSS() {
   if (document.getElementById("page-transition-style")) return;
   const style = document.createElement("style");
@@ -268,7 +283,6 @@ function setupTransitionCSS() {
   document.body.appendChild(overlay);
 }
 
-// Fade sang một URL
 function goWithFade(url) {
   saveMusicTime();
   sessionStorage.setItem("isNavigating", "true");
@@ -286,7 +300,6 @@ function goWithFade(url) {
   setTimeout(doNavigate, 700);
 }
 
-// Fade rồi chuyển qua loading.html
 function goViaLoading(destination) {
   saveMusicTime();
   sessionStorage.setItem("isNavigating", "true");
@@ -304,14 +317,12 @@ function goViaLoading(destination) {
   setTimeout(doNavigate, 700);
 }
 
-// Fade in khi trang vừa load xong
 function fadeInLoading() {
   const overlay = document.getElementById("page-fade-overlay");
   if (!overlay) return;
   overlay.style.transition   = "none";
   overlay.style.opacity      = "1";
   overlay.style.pointerEvents = "all";
-  overlay.classList.remove("fade-out");
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       overlay.style.transition   = "opacity 0.6s ease";
@@ -322,8 +333,6 @@ function fadeInLoading() {
 }
 
 // PHẦN 4: SETUP & DRAW 
-
-// Tắt anti-aliasing để pixel sharp
 function disableSmoothing() {
   noSmooth();
   drawingContext.imageSmoothingEnabled       = false;
@@ -331,7 +340,6 @@ function disableSmoothing() {
   drawingContext.webkitImageSmoothingEnabled = false;
 }
 
-// Chạy 1 lần khi trang load
 function setup() {
   createCanvas(windowWidth, windowHeight);
   pixelDensity(window.devicePixelRatio || 1);
@@ -347,49 +355,41 @@ function setup() {
 
   buildLanding();
 
-  // Tạo 5 quả cầu ngẫu nhiên
   for (let i = 0; i < 5; i++) {
     spheres.push(new Sphere(
       random(220, width - 220),
       random(220, height - 220),
-      random(90, 120),
+      random(155, 190),
       wordsSphere[i], sphereColors[i]
     ));
   }
 
-  // Slider ẩn
   slider = createSlider(0, 100, 0);
   slider.position(-9999, -9999);
   slider.style("opacity", "0");
   slider.style("pointer-events", "none");
 }
 
-// Vòng lặp render
 function draw() {
   background(252, 235, 222);
   drawingContext.imageSmoothingEnabled = false;
 
-  // Lớp nền
   updateDustParticlesBg();
   drawDustParticlesBg();
 
-  // Cập nhật bar nếu đang kéo
   if (barDragging) updateBar();
 
-  // Đang trong hiệu ứng chuyển màn
   if (transitionState !== null) {
     updateOrbitalScene();
     drawTransition();
     return;
   }
 
-  // Màn Landing
   if (currentScreen === "landing") {
     drawLanding();
     return;
   }
 
-  // Màn Orbitals
   cursor(ARROW);
   updateOrbitalScene();
   drawOrbitalScene();
@@ -400,18 +400,17 @@ function draw() {
 }
 
 // PHẦN 5: BACKGROUND DUST
-// Tạo toàn bộ hạt bụi
 function setupDustParticlesBg() {
   dustParticlesBg = [];
-  const total = max(140, floor((width * height) / BACKGROUND_DUST_DENSITY));
+  const total = max(80, floor((width * height) / BACKGROUND_DUST_DENSITY));
   for (let i = 0; i < total; i++) {
     const sizeRoll = random();
     const size =
-      sizeRoll < 0.62 ? 1.5 :
-      sizeRoll < 0.88 ? 3.5 :
-      random(2, 4);
+      sizeRoll < 0.62 ? 3 :
+      sizeRoll < 0.88 ? 7 :
+      random(4, 8);
     const driftAngle = random(TWO_PI);
-    const driftSpeed = map(size, 1, 3.4, 0.2, 0.08);
+    const driftSpeed = map(size, 2, 8, 0.12, 0.05);
     dustParticlesBg.push({
       x: random(width), y: random(height),
       renderX: 0, renderY: 0,
@@ -421,40 +420,35 @@ function setupDustParticlesBg() {
       driftAngle,  driftHeading: driftAngle, driftSpeed,
       vx: cos(driftAngle) * driftSpeed,
       vy: sin(driftAngle) * driftSpeed,
-      turnOffset:  random(1000), turnSpeed: random(0.001, 0.0022),
+      turnOffset:  random(1000), turnSpeed: random(0.0005, 0.0015),
       swayPhaseX:  random(TWO_PI), swayPhaseY: random(TWO_PI),
-      swaySpeedX:  random(0.01, 0.03), swaySpeedY: random(0.01, 0.03),
-      swayRadiusX: random(0.3, 1.8),   swayRadiusY: random(0.6, 2.8),
-      alphaPhase:  random(TWO_PI), alphaSpeed: random(0.004, 0.012)
+      swaySpeedX:  random(0.006, 0.018), swaySpeedY: random(0.006, 0.018),
+      swayRadiusX: random(0.2, 0.8),   swayRadiusY: random(0.3, 1.2),
+      alphaPhase:  random(TWO_PI), alphaSpeed: random(0.002, 0.006)
     });
   }
 }
 
-// Cập nhật vật lý
 function updateDustParticlesBg() {
   const t = frameCount;
   for (let p of dustParticlesBg) {
-    // Hướng bay thay đổi nhẹ theo noise
     const targetAngle =
       p.driftAngle + map(noise(p.turnOffset, t * p.turnSpeed), 0, 1, -0.9, 0.9);
-    p.driftHeading = lerpAngle(p.driftHeading, targetAngle, 0.04);
-    p.vx = lerp(p.vx, cos(p.driftHeading) * p.driftSpeed, 0.09);
-    p.vy = lerp(p.vy, sin(p.driftHeading) * p.driftSpeed, 0.09);
+    p.driftHeading = lerpAngle(p.driftHeading, targetAngle, 0.02);
+    p.vx = lerp(p.vx, cos(p.driftHeading) * p.driftSpeed, 0.06);
+    p.vy = lerp(p.vy, sin(p.driftHeading) * p.driftSpeed, 0.06);
     p.x += p.vx;
     p.y += p.vy;
-    // Sway nhỏ để tạo cảm giác nổi
     p.renderX = p.x + sin(t * p.swaySpeedX + p.swayPhaseX) * p.swayRadiusX;
     p.renderY = p.y + cos(t * p.swaySpeedY + p.swayPhaseY) * p.swayRadiusY;
-    // Wrap quanh màn
     const margin = p.glowSize * 0.5 + 4;
-    if (p.x < -margin)        p.x = width  + margin;
+    if (p.x < -margin)             p.x = width  + margin;
     else if (p.x > width  + margin) p.x = -margin;
-    if (p.y < -margin)        p.y = height + margin;
+    if (p.y < -margin)             p.y = height + margin;
     else if (p.y > height + margin) p.y = -margin;
   }
 }
 
-// Vẽ từng hạt bụi
 function drawDustParticlesBg() {
   push();
   noStroke();
@@ -467,49 +461,42 @@ function drawDustParticlesBg() {
   pop();
 }
 
+
 // PHẦN 6: LANDING PAGE
-// Khởi tạo state
 function buildLanding() {
   const now = millis();
   landingState = {
     titleCount:          0,
     headphonesCount:     0,
-    titleLastType:       now - TITLE_TYPING_SPEED,      // bắt đầu gõ ngay
-    headphonesLastType:  now - HEADPHONES_TYPING_SPEED,
-    titleDone:           null,  // millis() khi title xong
-    headphonesDone:      null,  // millis() khi headphones xong
-    buttonProgress:      0      // 0→1: nút START fade in
+    titleLastType:       now,
+    headphonesLastType:  0,
+    titleDone:           null,
+    headphonesDone:      null,
+    buttonProgress:      0
   };
 }
 
-// Update state mỗi frame
 function updateLanding() {
   const now = millis();
 
-  // Gõ title từng ký tự
   if (landingState.titleCount < LANDING_TITLE.length) {
     const elapsed = now - landingState.titleLastType;
     if (elapsed >= TITLE_TYPING_SPEED) {
       const steps = floor(elapsed / TITLE_TYPING_SPEED);
       landingState.titleCount = min(LANDING_TITLE.length, landingState.titleCount + steps);
       landingState.titleLastType += steps * TITLE_TYPING_SPEED;
-      if (landingState.titleCount === LANDING_TITLE.length && landingState.titleDone === null)
+      if (landingState.titleCount === LANDING_TITLE.length && landingState.titleDone === null) {
         landingState.titleDone = now;
+        landingState.headphonesLastType = now;
+      }
     }
     return;
   }
 
-  // Chờ sau title xong mới gõ headphones
-  if (landingState.titleDone !== null && now - landingState.titleDone < 1000) {
-    landingState.headphonesLastType = now;
-    return;
-  }
-
-  // Gõ headphones từng ký tự
   if (landingState.headphonesCount < LANDING_HEADPHONES.length) {
     const elapsed = now - landingState.headphonesLastType;
     if (elapsed >= HEADPHONES_TYPING_SPEED) {
-      const steps = floor(elapsed / HEADPHONES_TYPING_SPEED);
+      const steps = max(1, floor(elapsed / HEADPHONES_TYPING_SPEED));
       landingState.headphonesCount = min(LANDING_HEADPHONES.length, landingState.headphonesCount + steps);
       landingState.headphonesLastType += steps * HEADPHONES_TYPING_SPEED;
       if (landingState.headphonesCount === LANDING_HEADPHONES.length && landingState.headphonesDone === null)
@@ -518,17 +505,13 @@ function updateLanding() {
     return;
   }
 
-  // Chờ sau headphones xong mới hiện nút START
-  if (landingState.headphonesDone !== null && now - landingState.headphonesDone < 1000) {
+  if (landingState.headphonesDone !== null && now - landingState.headphonesDone < 500) {
     landingState.buttonProgress = 0;
     return;
   }
-
-  // Fade in nút START
-  landingState.buttonProgress = min(1, landingState.buttonProgress + 0.0055);
+  landingState.buttonProgress = min(1, landingState.buttonProgress + 0.006);
 }
 
-// Vẽ landing 
 function drawLanding(options = {}) {
   const { updateState = true, forceComplete = false, interactive = true } = options;
   if (updateState) updateLanding();
@@ -538,33 +521,30 @@ function drawLanding(options = {}) {
   const headphonesCount = forceComplete ? LANDING_HEADPHONES.length : landingState.headphonesCount;
   const buttonProgress  = forceComplete ? 1 : landingState.buttonProgress;
 
-  // Title "QUEN QUEN"
   push();
   fill(95, 168, 194);
   textAlign(CENTER, CENTER);
   textStyle(BOLD);
-  textSize(min(width * 0.2, 100));
+  textSize(min(width * 0.25, 250));
   textFont("Jersey 15");
   text(LANDING_TITLE.slice(0, titleCount), floor(width / 2), floor(layout.titleY));
   pop();
 
-  // Headphones subtitle
   if (titleCount === LANDING_TITLE.length) {
     push();
     fill(125, 32, 39);
-    textAlign(CENTER, BOTTOM);
+    textAlign(CENTER, CENTER);
     textStyle(NORMAL);
-    textSize(min(width * 0.027, 24));
+    textSize(min(width * 0.028, 36));
     textFont("Jersey 15");
     text(
       LANDING_HEADPHONES.slice(0, headphonesCount),
-      width * 0.12, layout.headphonesY - 34,
-      width * 0.76, 34
+      floor(width / 2),
+      floor(layout.headphonesY)
     );
     pop();
   }
 
-  // Nút START
   if (headphonesCount === LANDING_HEADPHONES.length) {
     drawStartBut(layout.buttonY, buttonProgress, interactive);
   } else if (interactive) {
@@ -572,8 +552,6 @@ function drawLanding(options = {}) {
   }
 }
 
-// Nút START
-// Vẽ nút START 
 function drawStartBut(y, progressValue, interactive = true) {
   const progress = easeOutCubic(progressValue);
   const button   = getStartButRect(y);
@@ -594,7 +572,6 @@ function drawStartBut(y, progressValue, interactive = true) {
   pop();
 }
 
-// Tính vị trí + kích thước nút START
 function getStartButRect(y) {
   push();
   textFont("Jersey 15");
@@ -602,10 +579,9 @@ function getStartButRect(y) {
   textStyle(NORMAL);
   const textW = textWidth("START");
   pop();
-  return { x: width / 2, y, w: max(98, textW + 40), h: START_BUT_SIZE + 20 };
+  return { x: width / 2, y, w: max(120, textW + 50), h: START_BUT_SIZE + 24 };
 }
 
-// Kiểm tra mouse có đang hover nút START không
 function hoverStartBut(button) {
   return (
     landingState.buttonProgress > 0.95 &&
@@ -616,54 +592,41 @@ function hoverStartBut(button) {
   );
 }
 
-// Layout helper 
-
-// Vị trí Y của title / button / headphones theo chiều cao màn
 function landingLayout() {
-  const groupCenterY = height * 0.5;
   return {
-    titleY:      groupCenterY - max(44, height * 0.06),
-    buttonY:     groupCenterY + max(30, height * 0.04),
-    headphonesY: height - max(26, height * 0.035)
+    titleY:      height * 0.42,
+    buttonY:     height * 0.58,
+    headphonesY: height - max(32, height * 0.05)
   };
 }
 
-// Kích hoạt chuyển sang Orbitals
-
-// Khi user bấm START — reset và bắt đầu transition
 function enterOrbitalScene() {
   if (transitionState !== null) return;
   transitionState = { startTime: millis() };
   sessionStorage.removeItem(MUSIC_KEY);
 
-  // Bắt đầu / restart nhạc từ đầu
-  if (!musicStarted && musicReady) playMusic(0);
-  else if (musicStarted) playMusic(0);
+  playMusic(0);
 
-  // Reset main text 
   mainTextTypingState = {
     messageIndex: 0, charCount: 0, lastType: millis(),
     completedTime: null, finishedAll: false, finishedTime: null
   };
 
-  // Reset final text 
   finalMainTextState = {
     started: false, charCount: 0, lastType: 0,
     completed: false, completedTime: null, _realFinished: null
   };
 
-  // Reset next but + bar
   nextAlpha  = 0;
   nextAppear = null;
   barAlpha   = 0;
   barAppear  = null;
 
-  // Reset guide 
   guidePhase1Done = null;
   mainTextAllowed = false;
   guideState = {
     charCount: 0, lastType: 0, started: false,
-    startTime: millis() + TRANSITION_DURATION, // bắt đầu sau khi transition xong
+    startTime: millis() + TRANSITION_DURATION,
     done: false,
     phase2Started: false, phase2CharCount: 0,
     phase2LastType: 0, phase2Done: false,
@@ -677,22 +640,18 @@ function enterOrbitalScene() {
 }
 
 // PHẦN 7: SCREEN TRANSITION
-// Hiệu ứng mỗi frame trong lúc transition
 function drawTransition() {
   const elapsed       = millis() - transitionState.startTime;
   const transitionRaw = constrain(elapsed / TRANSITION_DURATION, 0, 1);
   const transitionEased = easeInOutCubic(transitionRaw);
 
   cursor(ARROW);
-  // Orbitals fade in
   drawLayerAlpha(() => drawOrbitalScene(), transitionEased, 1);
-  // Landing fade out
   drawLayerAlpha(
     () => drawLanding({ updateState: false, forceComplete: true, interactive: false }),
     1 - transitionEased, 1
   );
 
-  // Transition xong → chuyển màn 
   if (transitionRaw >= 1) {
     transitionState = null;
     currentScreen   = "orbitals";
@@ -702,7 +661,6 @@ function drawTransition() {
   }
 }
 
-// Vẽ một layer
 function drawLayerAlpha(renderFn, alpha, scaleValue) {
   if (alpha <= 0.001) return;
   push();
@@ -717,12 +675,10 @@ function drawLayerAlpha(renderFn, alpha, scaleValue) {
 }
 
 // PHẦN 8: GUIDE TEXT
-// Logic gõ chữ 
 function updateGuide() {
   if (currentScreen !== "orbitals") return;
   const now = millis();
 
-  // Chờ delay trước khi bắt đầu
   if (!guideState.started) {
     if (now - guideState.startTime > GUIDE_1_DELAY) {
       guideState.started  = true;
@@ -731,7 +687,6 @@ function updateGuide() {
     return;
   }
 
-  // Gõ guide text từng ký tự
   if (!guideState.done) {
     if (now - guideState.lastType >= GUIDE_TYPING_SPEED) {
       guideState.charCount++;
@@ -746,7 +701,6 @@ function updateGuide() {
     return;
   }
 
-  // Sau khi guide 1 xong → gõ main text
   if (!mainTextAllowed && guidePhase1Done !== null) {
     if (now - guidePhase1Done >= MAIN_TEXT_DELAY_AFTER_GUIDE) {
       mainTextAllowed = true;
@@ -754,17 +708,14 @@ function updateGuide() {
     }
   }
 
-  // Flicker trong lúc chờ
   if (guideState.done && !guideState.phase2Started) {
     tickGuideFlicker(GUIDE_TEXT_1, now);
   }
 
-  // Sau khi main text xong → set trigger pha 2
   if (mainTextTypingState.finishedAll && guideState.phase2Trigger === null) {
     guideState.phase2Trigger = mainTextTypingState.finishedTime;
   }
 
-  // Gõ guide text pha 2
   if (
     guideState.phase2Trigger !== null &&
     now >= guideState.phase2Trigger &&
@@ -788,11 +739,9 @@ function updateGuide() {
     }
   }
 
-  // Flicker pha 2 sau khi gõ xong
   if (guideState.phase2Done) tickGuideFlicker(GUIDE_TEXT_2, now);
 }
 
-// Chọn ngẫu nhiên ký tự để nhấp nháy
 function tickGuideFlicker(fullText, now) {
   if (now < guideFlicker.nextFlicker) return;
   const count = floor(random(1, 3));
@@ -801,54 +750,49 @@ function tickGuideFlicker(fullText, now) {
   guideFlicker.nextFlicker = now + guideFlicker.flickerSpeed + random(-400, 400);
 }
 
-// Vẽ guide text lên canvas 
 function drawGuide() {
   if (!guideState.started || guideState.charCount === 0) return;
   push();
   textFont("Jersey 15");
   textAlign(CENTER, CENTER);
-  textSize(18);
+  textSize(35);
   noStroke();
   const now          = millis();
   const usePhase2    = guideState.phase2Started;
   const fullText     = usePhase2 ? GUIDE_TEXT_2 : GUIDE_TEXT_1;
   const displayCount = usePhase2 ? guideState.phase2CharCount : guideState.charCount;
 
-  // Tính tổng chiều rộng để căn giữa
   let totalW = 0;
   for (let i = 0; i < displayCount; i++) totalW += textWidth(fullText[i]);
   let startX = width / 2 - totalW / 2;
 
-  // Vẽ từng ký tự, flicker nếu được chọn
   for (let i = 0; i < displayCount; i++) {
     const isFlickering = guideFlicker.indices.includes(i);
     const flickerPhase = sin(now * 0.012 + i * 0.8);
     const baseAlpha    = isFlickering ? map(flickerPhase, -1, 1, 80, 200) : 255;
     fill(125, 32, 39, baseAlpha);
     const cw = textWidth(fullText[i]);
-    text(fullText[i], floor(startX + cw / 2), 36);
+    text(fullText[i], floor(startX + cw / 2), 42);
     startX += cw;
   }
   pop();
 }
 
-// PHẦN 9: SPHERES (5 quả cầu chữ 3D)
+// PHẦN 9: SPHERES
 class Sphere {
   constructor(x, y, r, chars, col) {
     this.pos  = createVector(x, y);
     this.vel  = p5.Vector.random2D().mult(random(0.01, 0.08));
-    this.r    = r;               // bán kính 
-    this.screenRadius = r;       // bán kính đằng sau
-    this.chars = chars;          // chữ hiển thị
-    this.col   = col;            // màu
+    this.r    = r;
+    this.screenRadius = r;
+    this.chars = chars;
+    this.col   = col;
 
-    // Góc xoay 3 trục
     this.rotY = random(TWO_PI); this.rotX = random(TWO_PI); this.rotZ = random(TWO_PI);
     this.rotYSpeed = random(0.001, 0.002);
     this.rotXSpeed = random(0.0004, 0.001);
     this.rotZSpeed = random(-0.001, 0.001);
 
-    // Độ sâu + noise offset
     this.depth        = random(-70, 90);
     this.depthOffset  = random(1000);
     this.driftOffsetX = random(1000);
@@ -856,21 +800,19 @@ class Sphere {
     this.homeOffsetX  = random(2000);
     this.homeOffsetY  = random(2000);
 
-    // Chuyển động
     this.maxSpeed        = random(1.2, 2.2);
-    this.freeFlight      = 0;              // tăng khi bị đẩy bởi chuột
-    this.homeBase        = createVector(x, y); // điểm gốc cố định
-    this.home            = createVector(x, y); // điểm gốc drift theo noise
+    this.freeFlight      = 0;
+    this.homeBase        = createVector(x, y);
+    this.home            = createVector(x, y);
     this.roamRadiusX     = random(220, 420);
     this.roamRadiusY     = random(180, 380);
     this.homeDriftRadius = random(60, 120);
-    this.separationBoost = random(0.9, 1.15); // hệ số đẩy khi chạm cầu khác
+    this.separationBoost = random(0.9, 1.15);
 
     this.points = [];
     this.makeSphere();
   }
 
-  // Tạo các điểm trên mặt cầu
   makeSphere() {
     const bandCount = 10;
     const bandSteps = max(22, this.chars.length * 5);
@@ -884,7 +826,6 @@ class Sphere {
         this.addPoint(cos(theta) * ringRadius, sin(phi), sin(theta) * ringRadius, true, i);
       }
     }
-    // Điểm phân bố spread cho particle mode
     const extraParticles = 800;
     for (let i = 0; i < extraParticles; i++) {
       let ny         = 1 - (i / (extraParticles - 1)) * 2;
@@ -894,7 +835,6 @@ class Sphere {
     }
   }
 
-  // Thêm 1 điểm vào mảng points
   addPoint(nx, ny, nz, textSlot, charIndex) {
     this.points.push({
       baseX: nx * this.r, baseY: ny * this.r, baseZ: nz * this.r,
@@ -907,7 +847,6 @@ class Sphere {
     });
   }
 
-  // Đẩy xa các cầu khác
   separate(allSpheres) {
     let repel = createVector(0, 0);
     let count = 0;
@@ -927,13 +866,11 @@ class Sphere {
     if (count > 0) { repel.div(count); this.vel.add(repel); }
   }
 
-  // Cập nhật vị trí + xoay
   update() {
     const t     = frameCount * 0.0024;
     const homeT = frameCount * 0.0011;
     this.freeFlight = max(0, this.freeFlight - 0.018);
 
-    // Home drift nhẹ theo noise
     this.home.x = constrain(
       this.homeBase.x + map(noise(this.homeOffsetX, homeT), 0, 1, -this.homeDriftRadius, this.homeDriftRadius),
       this.r + 90, width - this.r - 90
@@ -942,8 +879,7 @@ class Sphere {
       this.homeBase.y + map(noise(this.homeOffsetY, homeT), 0, 1, -this.homeDriftRadius * 0.8, this.homeDriftRadius * 0.8),
       this.r + 100, height - this.r - 100
     );
-
-    // Roam xung quanh home
+    
     const targetX = this.home.x + map(noise(this.driftOffsetX, t), 0, 1, -this.roamRadiusX, this.roamRadiusX);
     const targetY = this.home.y + map(noise(this.driftOffsetY, t), 0, 1, -this.roamRadiusY, this.roamRadiusY);
     const steer   = createVector(targetX - this.pos.x, targetY - this.pos.y)
@@ -953,7 +889,6 @@ class Sphere {
     this.vel.limit(this.maxSpeed + this.freeFlight * 2.4);
     this.pos.add(this.vel);
 
-    // Giữ trong màn
     const padding = this.r * 0.95;
     if (this.pos.x < padding)            this.vel.x += (padding - this.pos.x) * 0.03;
     if (this.pos.x > width  - padding)   this.vel.x -= (this.pos.x - (width  - padding)) * 0.03;
@@ -961,21 +896,17 @@ class Sphere {
     if (this.pos.y > height - padding)   this.vel.y -= (this.pos.y - (height - padding)) * 0.03;
 
     this.vel.mult(0.999);
-
-    // Xoay 3 trục
     this.rotY += this.rotYSpeed;
     this.rotX += this.rotXSpeed;
     this.rotZ += this.rotZSpeed;
 
-    // Depth drift
     let targetDepth = map(noise(this.depthOffset, t * 0.8), 0, 1, -95, 120);
     this.depth      = lerp(this.depth, targetDepth, 0.035);
     this.screenRadius = this.r * (CAMERA_DISTANCE / (CAMERA_DISTANCE - this.depth));
   }
 
-  // Đẩy các điểm ra khi hover chuột
   interact() {
-    const mouseRadius = 50;
+    const mouseRadius = 80;
     for (let p of this.points) {
       let px = this.pos.x + p.rx;
       let py = this.pos.y + p.ry;
@@ -996,7 +927,6 @@ class Sphere {
     }
   }
 
-  // Render cầu
   display() {
     push();
     translate(this.pos.x, this.pos.y);
@@ -1006,7 +936,6 @@ class Sphere {
 
     const renderPoints = [];
 
-    // Tính toán vị trí + phối cảnh
     for (let p of this.points) {
       let x = p.baseX, y = p.baseY, z = p.baseZ;
       let pulse = 1 + sin(frameCount * 0.018 + p.baseY * 0.03 + this.depthOffset) * 0.012;
@@ -1017,7 +946,6 @@ class Sphere {
       p.z += (z - p.z) * 0.2;
       p.vx *= 0.92; p.vy *= 0.92;
 
-      // Xoay 3 trục
       let rx1 = p.x * cos(this.rotY) - p.z * sin(this.rotY);
       let rz1 = p.x * sin(this.rotY) + p.z * cos(this.rotY);
       let ry1 = p.y * cos(this.rotX) - rz1 * sin(this.rotX);
@@ -1037,16 +965,14 @@ class Sphere {
       renderPoints.push({ point: p, mx, my, alpha, worldZ, perspective });
     }
 
-    // Sắp xếp theo độ sâu
     renderPoints.sort((a, b) => a.worldZ - b.worldZ);
 
-    // Text mode
     if (textFade > 0) {
       noStroke();
       const textItems = [];
       for (let item of renderPoints) {
         if (!item.point.textSlot) continue;
-        const sz        = constrain(22 * item.perspective, 5, 24);
+        const sz        = constrain(42 * item.perspective, 10, 46);
         const szRounded = floor(sz);
         textItems.push({ item, szRounded });
       }
@@ -1059,12 +985,11 @@ class Sphere {
       }
     }
 
-    // Particle mode
     if (particleFade > 0) {
       noStroke();
       for (let item of renderPoints) {
         fill(this.col[0], this.col[1], this.col[2], item.alpha * (particleFade / 255));
-        circle(floor(item.mx), floor(item.my), constrain(2.3 * item.perspective, 1.7, 5.8));
+        circle(floor(item.mx), floor(item.my), constrain(2.8 * item.perspective, 3, 9));
       }
     }
 
@@ -1072,18 +997,15 @@ class Sphere {
   }
 }
 
-// Cập nhật toàn bộ orbitals scene
 function updateOrbitalScene() {
   updateMainText();
   updateFinalMainTextTyping();
 
-  // Fade in nút NEXT
   if (nextAppear !== null) {
     const now = millis();
     if (now >= nextAppear) nextAlpha = min(255, nextAlpha + 5);
   }
 
-  // Fade in bar
   if (barAppear !== null) {
     const now = millis();
     if (now >= barAppear) barAlpha = min(255, barAlpha + 8);
@@ -1095,14 +1017,12 @@ function updateOrbitalScene() {
   for (let s of spheres) s.interact();
 }
 
-// 5 quả cầu (sắp xếp từ xa đến gần)
 function drawOrbitalScene() {
   let orderedSpheres = [...spheres].sort((a, b) => a.depth - b.depth);
   for (let s of orderedSpheres) s.display();
 }
 
-// PHẦN 10 — MAIN BOX
-// Đếm số dòng khi wrap text
+// PHẦN 10: MAIN BOX
 function countMainTextLines(str, maxW) {
   if (!str || str.length === 0) return 1;
   const words  = str.split(" ");
@@ -1116,7 +1036,6 @@ function countMainTextLines(str, maxW) {
   return lines;
 }
 
-// Update main text typing
 function updateMainText() {
   if (!mainTextAllowed) return;
   const now = millis();
@@ -1136,7 +1055,6 @@ function updateMainText() {
     return;
   }
 
-  // Chờ MAIN_TEXT_DELAY rồi chuyển đoạn tiếp
   if (mainTextTypingState.completedTime !== null &&
       now - mainTextTypingState.completedTime > MAIN_TEXT_DELAY) {
     if (mainTextTypingState.messageIndex < MAIN_TEXT_MESSAGES.length - 1) {
@@ -1145,7 +1063,6 @@ function updateMainText() {
       mainTextTypingState.lastType       = now;
       mainTextTypingState.completedTime  = null;
     } else {
-      // Hết 3 đoạn → hiện bar
       mainTextTypingState.finishedAll  = true;
       mainTextTypingState.finishedTime = now - BAR_LEAD_TIME;
       barAppear = now + BAR_DELAY;
@@ -1153,8 +1070,6 @@ function updateMainText() {
   }
 }
 
-// Update final main text typing
-// Gõ FINAL_MAIN_TEXT sau FINAL_MAIN_TEXT_DELAY
 function updateFinalMainTextTyping() {
   if (!mainTextTypingState.finishedAll) return;
   if (finalMainTextState.completed) return;
@@ -1177,119 +1092,89 @@ function updateFinalMainTextTyping() {
       finalMainTextState.charCount      = FINAL_MAIN_TEXT.length;
       finalMainTextState.completed      = true;
       finalMainTextState.completedTime  = now;
-      nextAppear = now + NEXT_DELAY; // kích hoạt fade in nút NEXT
+      nextAppear = now + NEXT_DELAY;
     }
   }
 }
 
-// Vẽ toàn bộ Main Box
 function drawMainBox() {
-  const boxW = min(width * 0.78, 820);
-  const x    = width / 2 - boxW / 2;
-  const padV = 16;
+  const L = getMainBoxLayout();
+  const { boxW, boxH, x, y, textAreaW, typed,
+          nextButX, nextButY, NEXT_W, NEXT_H,
+          barX, barY, BAR_W } = L;
 
-  // Chiều rộng vùng text
-  const textAreaW = nextAlpha > 0 ? boxW - 100 - 56 - 16 : boxW - 56;
-
-  textFont("Jersey 15");
-  textSize(20);
-  const lineH = 20 * 1.4;
-
-  // Text đang hiển thị
-  const typed = !finalMainTextState.started
-    ? MAIN_TEXT_MESSAGES[mainTextTypingState.messageIndex].slice(0, mainTextTypingState.charCount)
-    : FINAL_MAIN_TEXT.slice(0, finalMainTextState.charCount);
-
-  const lines = max(1, countMainTextLines(typed, textAreaW));
-  const boxH  = lines * lineH + padV * 2;
-  const y     = height - 40 - boxH;
-
-  // Tọa độ next but
-  const nextButW = 100, nextButH = 40;
-  const nextButX = x + boxW - nextButW / 2 - 16;
-  const nextButY = y + boxH / 2;
-
-  // Hover cursor next but
   if (nextAlpha > 200) {
     const hoverNextBut =
-      mouseX >= nextButX - nextButW / 2 && mouseX <= nextButX + nextButW / 2 &&
-      mouseY >= nextButY - nextButH / 2 && mouseY <= nextButY + nextButH / 2;
+      mouseX >= nextButX - NEXT_W / 2 && mouseX <= nextButX + NEXT_W / 2 &&
+      mouseY >= nextButY - NEXT_H / 2 && mouseY <= nextButY + NEXT_H / 2;
     if (hoverNextBut) cursor(HAND);
   }
 
   push();
 
-  // Khung main box
   fill(252, 235, 222);
   stroke(95, 168, 194);
-  strokeWeight(1.5);
-  rect(floor(x), floor(y), boxW, boxH, 6);
+  strokeWeight(3);
+  rect(floor(x), floor(y), boxW, boxH, 8);
 
-  // Tag box
+  //tag
+  const TAG_W = 180, TAG_H = 58; 
+  const tagX  = floor(x) + 18;
+  const tagCX = tagX + TAG_W / 2;
   noStroke();
   fill(95, 168, 194);
-  rect(floor(x) + 18, floor(y) - 18, 90, 28, 5);
-
-  // Tag text 
+  rect(tagX, floor(y) - 28, TAG_W, TAG_H, 8); 
   fill(125, 32, 39);
   textAlign(CENTER, CENTER);
   textFont("Jersey 15");
-  textSize(22);
-  text("Orbitals", floor(x) + 63, floor(y) - 4);
+  textSize(45);
+  text("Orbitals", tagCX, floor(y) - 28 + TAG_H / 2);
 
-  // Bar (TEXT ↔ PARTICLES)
+  //bar
   if (barAlpha > 0) {
-    const barW = 130;
-    const barH = 7;
-    const barX = x + boxW - barW;
-    const barY = y - 24;
+    const BAR_H = 14;
 
     const hoveringBar =
-      mouseX >= barX - 10 && mouseX <= barX + barW + 10 &&
-      mouseY >= barY - 20 && mouseY <= barY + 20;
+      mouseX >= barX - 10 && mouseX <= barX + BAR_W + 10 &&
+      mouseY >= barY - 24 && mouseY <= barY + 24;
     if (hoveringBar && barAlpha > 200) cursor(HAND);
 
-    // Label bar
     fill(125, 32, 39, barAlpha);
     noStroke();
     textAlign(CENTER, CENTER);
     textFont("Jersey 15");
-    textSize(14);
-    text("TEXT <-> PARTICLES", floor(barX + barW / 2), floor(barY - 16));
+    textSize(27);
+    text("TEXT <-> PARTICLES", floor(barX + BAR_W / 2), floor(barY - 20));
 
-    // Track bar
     noFill();
     stroke(153, 148, 54, barAlpha);
-    strokeWeight(1);
-    rect(floor(barX), floor(barY), barW, barH, 10);
+    strokeWeight(3);
+    rect(floor(barX), floor(barY), BAR_W, BAR_H, 10);
 
-    // Handle bar
     noStroke();
     fill(125, 32, 39, barAlpha);
-    const handleX = map(barValue, 0, 100, barX + 8, barX + barW - 8);
-    circle(floor(handleX), floor(barY + barH / 2), 15);
+    const handleX = map(barValue, 0, 100, barX + 9, barX + BAR_W - 9);
+    circle(floor(handleX), floor(barY + BAR_H / 2), 20);
   }
 
-  // Main text / Final text
   fill(125, 32, 39);
   noStroke();
   textAlign(LEFT, CENTER);
   textFont("Jersey 15");
-  textSize(20);
+  textSize(L.TEXT_SIZE);
   if (mainTextAllowed) {
-    text(typed, floor(x) + 28, floor(y) + boxH / 2, textAreaW);
+    text(typed, floor(x) + 32, floor(y) + boxH / 2, textAreaW);
   }
 
-  // Next but
   if (nextAlpha > 0) {
     fill(153, 148, 54, nextAlpha);
     noStroke();
     rectMode(CENTER);
-    rect(floor(nextButX), floor(nextButY), nextButW, nextButH, 6);
+    rect(floor(nextButX), floor(nextButY), NEXT_W, NEXT_H, 6);
     fill(125, 32, 39, nextAlpha);
     textAlign(CENTER, CENTER);
     textFont("Jersey 15");
-    textSize(28);
+    textSize(54); 
     text(NEXT_TEXT, floor(nextButX), floor(nextButY) - 1);
   }
 
@@ -1297,7 +1182,6 @@ function drawMainBox() {
 }
 
 // PHẦN 11: UI ICONS
-// Tính tâm 2 icon
 function getIconRects() {
   const musicX = width - ICON_MARGIN - ICON_SIZE / 2;
   const camX   = width - ICON_MARGIN - ICON_SIZE - ICON_MARGIN - ICON_SIZE / 2;
@@ -1308,7 +1192,6 @@ function getIconRects() {
   };
 }
 
-// Vẽ 2 icon 
 function drawUIIcons() {
   if (currentScreen !== "orbitals") return;
   const icons = getIconRects();
@@ -1320,43 +1203,41 @@ function drawUIIcons() {
   push();
   rectMode(CENTER);
 
-  // Icon camera
-  stroke(95, 168, 194); strokeWeight(1.5); fill(252, 235, 222);
+  stroke(95, 168, 194); strokeWeight(2.5); fill(252, 235, 222);
   rect(floor(icons.cam.x), floor(icons.cam.y), ICON_SIZE, ICON_SIZE, 6);
   let camX = floor(icons.cam.x), camY = floor(icons.cam.y) + 2;
-  noFill(); stroke(125, 32, 39); strokeWeight(1.4);
+  noFill(); stroke(125, 32, 39); strokeWeight(2.3);
   rectMode(CENTER);
-  rect(camX, camY, 20, 14, 2);   // thân máy ảnh
-  circle(camX, camY, 8);          // ống kính
-  noFill(); stroke(125, 32, 39);
-  rect(camX - 4, camY - 9, 8, 4, 1); // nóc máy ảnh
+  rect(camX, camY, 32, 22, 5);
+  circle(camX, camY, 14);
+  noFill(); stroke(127, 34, 41);
+  rect(camX -  8, camY - 14, 13, 7, 3);
 
-  // Icon music
-  stroke(95, 168, 194); strokeWeight(1.5); fill(252, 235, 222);
+  stroke(95, 168, 194); strokeWeight(2.5); fill(252, 235, 222);
   rectMode(CENTER);
   rect(floor(icons.music.x), floor(icons.music.y), ICON_SIZE, ICON_SIZE, 6);
   let musicX = floor(icons.music.x) - 5, musicY = floor(icons.music.y);
-  noFill(); stroke(125, 32, 39); strokeWeight(1.4);
-  // Hình loa
+  noFill(); stroke(125, 32, 39); strokeWeight(2.3);
   beginShape();
-  vertex(musicX-5, musicY-4); vertex(musicX, musicY-4); vertex(musicX+5, musicY-8);
-  vertex(musicX+5, musicY+8); vertex(musicX, musicY+4); vertex(musicX-5, musicY+4);
+  vertex(musicX-8, musicY-6);
+  vertex(musicX,   musicY-6);
+  vertex(musicX+8, musicY-12);
+  vertex(musicX+8, musicY+12);
+  vertex(musicX,   musicY+6);
+  vertex(musicX-8, musicY+6);
   endShape(CLOSE);
   if (!isMuted) {
-    // Sóng âm thanh
-    noFill(); stroke(125, 32, 39); strokeWeight(1.2);
-    arc(musicX+9, musicY, 8,  12, -PI*0.5, PI*0.5);
-    arc(musicX+9, musicY, 14, 20, -PI*0.5, PI*0.5);
+    noFill(); stroke(125, 32, 39); strokeWeight(2.3);
+    arc(musicX+13, musicY, 12, 18, -PI*0.5, PI*0.5);
+    arc(musicX+13, musicY, 20, 28, -PI*0.5, PI*0.5);
   } else {
-    // Dấu X khi muted
-    stroke(95, 168, 194); strokeWeight(1.8);
-    line(musicX+7, musicY-7, musicX+14, musicY+7);
-    line(musicX+14, musicY-7, musicX+7, musicY+7);
+    stroke(95, 168, 194); strokeWeight(2.3);
+    line(musicX+10, musicY-10, musicX+20, musicY+10);
+    line(musicX+20, musicY-10, musicX+10, musicY+10);
   }
   pop();
 }
 
-// Chụp ảnh màn hình và lưu file
 function saveScreenshot() {
   saveCanvas("screenshot_" + day() + "_" + hour() + minute() + second(), "png");
 }
@@ -1364,7 +1245,6 @@ function saveScreenshot() {
 // PHẦN 12: MOUSE EVENTS
 function mousePressed() {
 
-  // Click icon camera / music
   if (currentScreen === "orbitals") {
     const icons = getIconRects();
     if (mouseX >= icons.cam.x   - ICON_SIZE/2 && mouseX <= icons.cam.x   + ICON_SIZE/2 &&
@@ -1377,52 +1257,25 @@ function mousePressed() {
     }
   }
 
-  // Click nút NEXT → chuyển sang sketch2
   if (nextAlpha > 200) {
-    const boxW      = min(width * 0.78, 820);
-    const x         = width / 2 - boxW / 2;
-    const padV      = 16;
-    textFont("Jersey 15");
-    const textAreaW = boxW - 100 - 56 - 16;
-    const lineH     = 20 * 1.4;
-    const typed     = FINAL_MAIN_TEXT.slice(0, finalMainTextState.charCount);
-    const lines     = max(1, countMainTextLines(typed, textAreaW));
-    const boxH      = lines * lineH + padV * 2;
-    const y         = height - 40 - boxH;
-    const nextButW  = 100, nextButH = 40;
-    const nextButX  = x + boxW - nextButW / 2 - 16;
-    const nextButY  = y + boxH / 2;
-    if (mouseX >= nextButX - nextButW/2 && mouseX <= nextButX + nextButW/2 &&
-        mouseY >= nextButY - nextButH/2 && mouseY <= nextButY + nextButH/2) {
+    const L = getMainBoxLayout();
+    if (mouseX >= L.nextButX - L.NEXT_W / 2 && mouseX <= L.nextButX + L.NEXT_W / 2 &&
+        mouseY >= L.nextButY - L.NEXT_H / 2 && mouseY <= L.nextButY + L.NEXT_H / 2) {
       goToNextScene(); return;
     }
   }
 
-  // Click nút START
   if (transitionState === null && currentScreen === "landing" &&
       landingState.headphonesCount === LANDING_HEADPHONES.length) {
     const layout = landingLayout();
     if (hoverStartBut(getStartButRect(layout.buttonY))) { enterOrbitalScene(); return; }
   }
 
-  // Click / drag bar
   if (mainTextTypingState.finishedAll && barAlpha > 200) {
-    const boxW      = min(width * 0.78, 820);
-    const x         = width / 2 - boxW / 2;
-    const barW      = 130;
-    const barX      = x + boxW - barW;
-    const padV      = 16;
-    textFont("Jersey 15"); textSize(20);
-    const textAreaW  = boxW - 100 - 56 - 16;
-    const lineH      = 20 * 1.4;
-    const currentTyped = finalMainTextState.started
-      ? FINAL_MAIN_TEXT.slice(0, finalMainTextState.charCount)
-      : MAIN_TEXT_MESSAGES[mainTextTypingState.messageIndex].slice(0, mainTextTypingState.charCount);
-    const lines = max(1, countMainTextLines(currentTyped, textAreaW));
-    const boxH  = lines * lineH + padV * 2;
-    const barY  = (height - 40 - boxH) - 24;
-    if (mouseX >= barX - 30 && mouseX <= barX + barW + 30 &&
-        mouseY >= barY - 30 && mouseY <= barY + 30) {
+    const L = getMainBoxLayout();
+    const { barX, barY, BAR_W } = L;
+    if (mouseX >= barX - 20 && mouseX <= barX + BAR_W + 20 &&
+        mouseY >= barY - 20 && mouseY <= barY + 20) {
       barDragging = true; updateBar(); return;
     }
   }
@@ -1432,32 +1285,25 @@ function mouseReleased() {
   barDragging = false;
 }
 
-// Tính lại bar theo vị trí chuột X
 function updateBar() {
-  const boxW = min(width * 0.78, 820);
-  const x    = width / 2 - boxW / 2;
-  const barW = 130;
-  const barX = x + boxW - barW;
-  barValue   = constrain(map(mouseX, barX, barX + barW, 0, 100), 0, 100);
+  const L = getMainBoxLayout();
+  const { barX, BAR_W } = L;
+  barValue = constrain(map(mouseX, barX, barX + BAR_W, 0, 100), 0, 100);
 }
+
 // PHẦN 13: UTILITIES
-// Góc theo đường ngắn nhất (tránh flip)
 function lerpAngle(start, end, amt) {
   let diff = ((end - start + PI) % TWO_PI) - PI;
   if (diff < -PI) diff += TWO_PI;
   return start + diff * amt;
 }
 
-// Easing: ease out
 function easeOutCubic(t)   { return 1 - pow(1 - t, 3); }
 
-// Easing: ease in-out
 function easeInOutCubic(t) { return t < 0.5 ? 4*t*t*t : 1 - pow(-2*t+2, 3)/2; }
 
-// Chuyển sang sketch2 qua loading screen
 function goToNextScene() { goViaLoading("sketch2.html"); }
 
-// Resize canvas
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
   disableSmoothing();
