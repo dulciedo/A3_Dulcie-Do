@@ -1,7 +1,7 @@
 // TABS PAGE
 
 // PHẦN 1: CONST / LET
-// MUSIC 
+// MUSIC
 const MUSIC_KEY       = "bgMusicTime";
 const MUSIC_MUTED_KEY = "bgMusicMuted";
 
@@ -17,33 +17,29 @@ let isMuted        = false;
 
 
 // BACKGROUND DUST 
-const BACKGROUND_DUST_DENSITY = 3500;
+const BACKGROUND_DUST_DENSITY = 7000;
 
 let dustParticlesBg = [];
 
 
-// TABS
-// Tab Messenger
-const TEXT_BOX_W     = 210;  
-const TEXT_BOX_MIN_H = 110;  
+// TABS 
+const TEXT_BOX_W     = 500;   // was 360
+const TEXT_BOX_MIN_H = 700;   // was 530
 
-// Tab Image
-const IMG_BOX_MIN_W = 170; 
-const IMG_BOX_MAX_W = 230;  
-const IMG_BOX_MIN_H = 150;
-const IMG_BOX_MAX_H = 230;  
+const IMG_BOX_MIN_W = 300;    // was 200
+const IMG_BOX_MAX_W = 420;    // was 280
+const IMG_BOX_MIN_H = 260;    // was 180
+const IMG_BOX_MAX_H = 380;    // was 270
 
-// Title bar
-const TITLEBAR_HEIGHT = 26;  
-const BUTTON_SIZE     = 15;  
-const BUTTON_GAP      = 4;   
-const TITLE_SIZE      = 17;  
-const CHAT_SIZE       = 13;  
+const TITLEBAR_HEIGHT = 58;   // was 40
+const BUTTON_SIZE     = 28;   // was 17
+const BUTTON_GAP      = 9;    // was 5
+const TITLE_SIZE      = 36;   // was 27
+const CHAT_SIZE       = 28;   // was 23
 
-// — Màu sắc tab —
-const MESSENGER_BAR_COLOR  = [95, 168, 194];  
-const IMG_BAR_COLOR        = [125, 32, 39];   
-const IMG_TITLE_TEXT_COLOR = [95, 168, 194];  
+const MESSENGER_BAR_COLOR  = [95, 168, 194];
+const IMG_BAR_COLOR        = [125, 32, 39];
+const IMG_TITLE_TEXT_COLOR = [95, 168, 194];
 
 let messages = [
   ["ban an com chuaa?",        "minh chuaaa"  ],
@@ -60,11 +56,9 @@ let tabs = [];
 // GUIDE TEXT 
 const GUIDE_TEXT = "click anywhere to reveal the memories";
 
-// Timing
-const GUIDE_TYPING_SPEED = 70;   // ms/ký tự
-const GUIDE_1_DELAY      = 800;  // ms chờ sau khi vào trang mới bắt đầu gõ
+const GUIDE_TYPING_SPEED = 70;
+const GUIDE_1_DELAY      = 800;
 
-// State guide typing
 let guideState = {
   charCount:  0,
   lastType:   0,
@@ -73,7 +67,6 @@ let guideState = {
   done:       false
 };
 
-// State flicker 
 let guideFlicker = {
   indices:      [],
   nextFlicker:  0,
@@ -81,18 +74,16 @@ let guideFlicker = {
 };
 
 
-// MAIN BOX — MAIN TEXT 
+// MAIN BOX 
 const MAIN_TEXT_MESSAGES = [
   "Messages? or images? things that always stay deep inside your devices...",
   "Things you forget even though you hold it in your hands every day...",
   "A space that preserves traces, proving that\u2026"
 ];
 
-// Timing 
-const MAIN_TEXT_TYPING_SPEED = 55;   
-const MAIN_TEXT_DELAY        = 1400;  
+const MAIN_TEXT_TYPING_SPEED = 55;
+const MAIN_TEXT_DELAY        = 1400;
 
-// State typing
 let mainTextTypingState = {
   messageIndex:  0,
   charCount:     0,
@@ -103,12 +94,11 @@ let mainTextTypingState = {
 };
 
 
-// MAIN BOX — FINAL TEXT + NEXT BUT 
+// FINAL TEXT + NEXT BUT
 const FINAL_MAIN_TEXT       = "There was once a presence, someone who passed through our lives...";
-const FINAL_MAIN_TEXT_DELAY = 5000;  
-const NEXT_DELAY            = 2200; 
+const FINAL_MAIN_TEXT_DELAY = 5000;
+const NEXT_DELAY            = 2200;
 
-// State final text
 let finalMainTextState = {
   started:     false,
   charCount:   0,
@@ -117,14 +107,15 @@ let finalMainTextState = {
   completedAt: null
 };
 
-let nextAlpha  = 0;    // độ trong suốt nút THE END 
-let nextAppear = null; // millis() thời điểm bắt đầu fade in NEXT
+let nextAlpha  = 0;
+let nextAppear = null;
 
 
 // UI ICONS 
-const ICON_SIZE   = 38;
-const ICON_MARGIN = 14;
+const ICON_SIZE   = 60;
+const ICON_MARGIN = 18;
 const ICON_TOP    = 16;
+
 
 // PHẦN 2: MUSIC
 function buildMusic() {
@@ -176,11 +167,10 @@ function saveMusicTime() {
 function resumeMusic() {
   const isNavigating = sessionStorage.getItem("isNavigating") === "true";
   sessionStorage.removeItem("isNavigating");
+  if (!isNavigating) return;
   let offset = 0;
-  if (isNavigating) {
-    const saved = sessionStorage.getItem(MUSIC_KEY);
-    offset = saved ? parseFloat(saved) : 0;
-  }
+  const saved = sessionStorage.getItem(MUSIC_KEY);
+  offset = saved ? parseFloat(saved) : 0;
   playMusic(offset);
 }
 
@@ -219,7 +209,6 @@ function setupTransitionCSS() {
   document.body.appendChild(overlay);
 }
 
-// Fade rồi đi thẳng đến URL
 function goWithFade(url) {
   saveMusicTime();
   sessionStorage.setItem("isNavigating", "true");
@@ -253,7 +242,7 @@ function fadeInLoading() {
 }
 
 
-// PHẦN 4: SETUP & DRAW (p5.js)
+// PHẦN 4: SETUP & DRAW
 function disableSmoothing() {
   noSmooth();
   drawingContext.imageSmoothingEnabled       = false;
@@ -288,39 +277,34 @@ function draw() {
   cursor(ARROW);
   drawingContext.imageSmoothingEnabled = false;
 
-  // Nền pixel
   updateDustParticlesBg();
   drawDustParticlesBg();
 
-  // Tabs (Messenger + Image)
   for (let tab of tabs) tab.display();
 
-  // Guide text
   updateGuide();
   drawGuide();
 
-  // Main box
   updateMainText();
   updateFinalMainTextTyping();
   drawMainBox();
 
-  // UI Icons
   drawUIIcons();
 }
 
 
-// PHẦN 5: BACKGROUND DUST
+// PHẦN 5: BACKGROUND DUST 
 function setupDustParticlesBg() {
   dustParticlesBg = [];
-  const total = max(140, floor((width * height) / BACKGROUND_DUST_DENSITY));
+  const total = max(80, floor((width * height) / BACKGROUND_DUST_DENSITY));
   for (let i = 0; i < total; i++) {
     const sizeRoll = random();
     const size =
-      sizeRoll < 0.62 ? 1.5 :
-      sizeRoll < 0.88 ? 3.5 :
-      random(2, 4);
+      sizeRoll < 0.62 ? 3 :
+      sizeRoll < 0.88 ? 7 :
+      random(4, 8);
     const driftAngle = random(TWO_PI);
-    const driftSpeed = map(size, 1, 3.4, 0.2, 0.08);
+    const driftSpeed = map(size, 2, 8, 0.12, 0.05);
     dustParticlesBg.push({
       x: random(width), y: random(height),
       renderX: 0, renderY: 0,
@@ -330,11 +314,11 @@ function setupDustParticlesBg() {
       driftAngle,  driftHeading: driftAngle, driftSpeed,
       vx: cos(driftAngle) * driftSpeed,
       vy: sin(driftAngle) * driftSpeed,
-      turnOffset:  random(1000), turnSpeed: random(0.001, 0.0022),
+      turnOffset:  random(1000), turnSpeed: random(0.0005, 0.0015),
       swayPhaseX:  random(TWO_PI), swayPhaseY: random(TWO_PI),
-      swaySpeedX:  random(0.01, 0.03), swaySpeedY: random(0.01, 0.03),
-      swayRadiusX: random(0.3, 1.8),   swayRadiusY: random(0.6, 2.8),
-      alphaPhase:  random(TWO_PI), alphaSpeed: random(0.004, 0.012)
+      swaySpeedX:  random(0.006, 0.018), swaySpeedY: random(0.006, 0.018),
+      swayRadiusX: random(0.2, 0.8),   swayRadiusY: random(0.3, 1.2),
+      alphaPhase:  random(TWO_PI), alphaSpeed: random(0.002, 0.006)
     });
   }
 }
@@ -344,9 +328,9 @@ function updateDustParticlesBg() {
   for (let p of dustParticlesBg) {
     const targetAngle =
       p.driftAngle + map(noise(p.turnOffset, t * p.turnSpeed), 0, 1, -0.9, 0.9);
-    p.driftHeading = lerpAngle(p.driftHeading, targetAngle, 0.04);
-    p.vx = lerp(p.vx, cos(p.driftHeading) * p.driftSpeed, 0.09);
-    p.vy = lerp(p.vy, sin(p.driftHeading) * p.driftSpeed, 0.09);
+    p.driftHeading = lerpAngle(p.driftHeading, targetAngle, 0.02);
+    p.vx = lerp(p.vx, cos(p.driftHeading) * p.driftSpeed, 0.06);
+    p.vy = lerp(p.vy, sin(p.driftHeading) * p.driftSpeed, 0.06);
     p.x += p.vx;
     p.y += p.vy;
     p.renderX = p.x + sin(t * p.swaySpeedX + p.swayPhaseX) * p.swayRadiusX;
@@ -371,24 +355,20 @@ function drawDustParticlesBg() {
   pop();
 }
 
-// PHẦN 6: TABS (Messenger + Image)
-// Tạo tab ngẫu nhiên 
 
-// Tạo ngẫu nhiên tab tại vị trí click
+// PHẦN 6: TABS 
 function createRandomTab(mx, my) {
   let type = random(["text", "image"]);
   let tab  = new RetroTab(mx, my, type);
   tabs.push(tab);
 }
 
-// Class RetroTab 
 class RetroTab {
   constructor(x, y, type) {
     this.x = x; this.y = y; this.type = type;
     this.dragging = false; this.offsetX = 0; this.offsetY = 0;
 
     if (this.type === "text") {
-      // Tab Messenger
       this.title      = "Messenger";
       this.barColorR  = MESSENGER_BAR_COLOR[0];
       this.barColorG  = MESSENGER_BAR_COLOR[1];
@@ -398,7 +378,6 @@ class RetroTab {
       this.w          = TEXT_BOX_W;
       this.h          = null;
     } else {
-      // Tab Image
       this.title      = "Image";
       this.barColorR  = IMG_BAR_COLOR[0];
       this.barColorG  = IMG_BAR_COLOR[1];
@@ -412,107 +391,135 @@ class RetroTab {
     }
   }
 
-  // Chiều cao tab chat
   _calcTextBoxHeight() {
-    const bubbleH = CHAT_SIZE + 14;
-    const topPad  = TITLEBAR_HEIGHT + 12;
-    const bubbleGap = 10;
-    const botPad  = 14;
+    const bubbleH   = CHAT_SIZE + 22;  
+    const topPad    = TITLEBAR_HEIGHT + 20;
+    const bubbleGap = 18;
+    const botPad    = 24;
     return topPad + bubbleH + bubbleGap + bubbleH + botPad;
   }
 
-  // Toàn bộ tab
   display() {
     if (this.type === "text" && this.h === null) this.h = this._calcTextBoxHeight();
     const bx = floor(this.x), by = floor(this.y);
 
-    // Khung tab
-    fill(235); stroke(this.barColorR, this.barColorG, this.barColorB); strokeWeight(1.5);
-    rect(bx, by, this.w, this.h, 4);
+    // Box background
+    fill(242, 238, 230);
+    stroke(this.barColorR, this.barColorG, this.barColorB);
+    strokeWeight(3);
+    rect(bx, by, this.w, this.h, 5);
 
-    // Thanh tiêu đề
-    fill(this.barColorR, this.barColorG, this.barColorB); noStroke();
-    rect(bx, by, this.w, TITLEBAR_HEIGHT, 4, 4, 0, 0);
+    // Titlebar
+    fill(this.barColorR, this.barColorG, this.barColorB);
+    noStroke();
+    rect(bx, by, this.w, TITLEBAR_HEIGHT, 5, 5, 0, 0);
 
-    // Chữ tiêu đề
+    // Title text
     fill(this.titleTextR, this.titleTextG, this.titleTextB);
-    textAlign(LEFT, CENTER); textFont("Jersey 15"); textSize(TITLE_SIZE);
-    text(this.title, bx + 8, by + floor(TITLEBAR_HEIGHT / 2));
+    textAlign(LEFT, CENTER);
+    textFont("Jersey 15");
+    textSize(TITLE_SIZE);
+    text(this.title, bx + 12, by + floor(TITLEBAR_HEIGHT / 2));
 
-    // Nút —, □, x
     this.drawButtons();
 
-    // Nội dung
     if (this.type === "text") this.drawChat();
     else this.drawImageContent();
 
-    // Cursor khi hover title bar / nút close
+    // Cursor hints
     if (mouseX >= this.x && mouseX <= this.x + this.w &&
         mouseY >= this.y && mouseY <= this.y + TITLEBAR_HEIGHT) cursor(ARROW);
-    const closeX = this.x + this.w - 60 + (BUTTON_SIZE + BUTTON_GAP) * 2;
-    const closeY = this.y + 5;
-    if (mouseX >= closeX && mouseX <= closeX + BUTTON_SIZE &&
-        mouseY >= closeY && mouseY <= closeY + BUTTON_SIZE) cursor(HAND);
+    const closeRect = this._closeRect();
+    if (mouseX >= closeRect.x && mouseX <= closeRect.x + BUTTON_SIZE &&
+        mouseY >= closeRect.y && mouseY <= closeRect.y + BUTTON_SIZE) cursor(HAND);
   }
 
-  // Vẽ 3 nút điều khiển (—, □, x) trên title bar
+  // vị trí 3 buttons
+  _buttonPositions() {
+    const totalW  = BUTTON_SIZE * 3 + BUTTON_GAP * 2;
+    const rightPad = 12;
+    const startX  = floor(this.x) + this.w - rightPad - totalW;
+    const btnY    = floor(this.y) + floor((TITLEBAR_HEIGHT - BUTTON_SIZE) / 2);
+    return [
+      { x: startX,                             y: btnY, label: "—" },
+      { x: startX + BUTTON_SIZE + BUTTON_GAP,  y: btnY, label: "□" },
+      { x: startX + (BUTTON_SIZE + BUTTON_GAP) * 2, y: btnY, label: "x" }
+    ];
+  }
+
+  _closeRect() {
+    const btns = this._buttonPositions();
+    return btns[2];
+  }
+
   drawButtons() {
-    let bx = floor(this.x), by = floor(this.y);
-    let startX = bx + this.w - 60, y = by + 5;
-    fill(240); noStroke();
-    rect(startX, y, BUTTON_SIZE, BUTTON_SIZE);
-    rect(startX + BUTTON_SIZE + BUTTON_GAP, y, BUTTON_SIZE, BUTTON_SIZE);
-    rect(startX + (BUTTON_SIZE + BUTTON_GAP) * 2, y, BUTTON_SIZE, BUTTON_SIZE);
-    fill(0); noStroke();
-    textAlign(CENTER, CENTER); textFont("Jersey 15"); textSize(9);
-    text("—", startX + floor(BUTTON_SIZE / 2), y + floor(BUTTON_SIZE / 2) + 1);
-    text("□", startX + BUTTON_SIZE + BUTTON_GAP + floor(BUTTON_SIZE / 2), y + floor(BUTTON_SIZE / 2));
-    text("x", startX + (BUTTON_SIZE + BUTTON_GAP) * 2 + floor(BUTTON_SIZE / 2), y + floor(BUTTON_SIZE / 2) + 1);
+    const btns = this._buttonPositions();
+    push();
+    rectMode(CORNER);
+    for (let btn of btns) {
+      fill(242, 238, 230);
+      noStroke();
+      rect(btn.x, btn.y, BUTTON_SIZE, BUTTON_SIZE, 2);
+      fill(80);
+      textAlign(CENTER, CENTER);
+      textFont("Jersey 15");
+      textSize(floor(BUTTON_SIZE * 0.65));
+      text(btn.label,
+           btn.x + floor(BUTTON_SIZE / 2),
+           btn.y + floor(BUTTON_SIZE / 2) + (btn.label === "—" ? 1 : 0));
+    }
+    pop();
   }
 
-  // Vẽ 2 bong bóng tin nhắn
   drawChat() {
     let leftMsg  = this.message[0], rightMsg = this.message[1];
-    textFont("Jersey 15"); textSize(CHAT_SIZE);
-    let leftW  = textWidth(leftMsg)  + 22;
-    let rightW = textWidth(rightMsg) + 22;
-    const maxBubbleW = this.w - 24;
-    leftW  = min(leftW,  maxBubbleW);
-    rightW = min(rightW, maxBubbleW);
+    textFont("Jersey 15");
+    textSize(CHAT_SIZE);
+
+    const bubblePadH = 28;  
+    const bubblePadV = 22;  
+    const bubbleH    = CHAT_SIZE + bubblePadV;
+    const maxBubbleW = this.w - 32;
+
+    let leftW  = min(textWidth(leftMsg)  + bubblePadH, maxBubbleW);
+    let rightW = min(textWidth(rightMsg) + bubblePadH, maxBubbleW);
+
     let bx = floor(this.x), by = floor(this.y);
-    const bubbleH  = CHAT_SIZE + 14;
-    const topPad   = TITLEBAR_HEIGHT + 12;
-    const bubbleGap = 10;
-    const leftBY  = by + topPad;
-    const rightBY = leftBY + bubbleH + bubbleGap;
+    const topPad    = TITLEBAR_HEIGHT + 20;
+    const bubbleGap = 18;
+    const leftBY    = by + topPad;
+    const rightBY   = leftBY + bubbleH + bubbleGap;
 
-    // Bong bóng trái
-    fill(255); noStroke();
-    rect(bx + 12, leftBY, leftW, bubbleH, 14);
-    fill(0); noStroke(); textAlign(LEFT, CENTER);
-    text(leftMsg, bx + 22, leftBY + bubbleH / 2);
+    // Left bubble
+    fill(255);
+    noStroke();
+    rect(bx + 16, leftBY, leftW, bubbleH, 16, 16, 16, 4);
+    fill(40);
+    textAlign(LEFT, CENTER);
+    text(leftMsg, bx + 16 + bubblePadH / 2, leftBY + bubbleH / 2);
 
-    // Bong bóng phải
-    fill(95, 168, 194); noStroke();
-    rect(bx + this.w - rightW - 12, rightBY, rightW, bubbleH, 14);
-    fill(255); textAlign(LEFT, CENTER);
-    text(rightMsg, bx + this.w - rightW, rightBY + bubbleH / 2);
+    // Right bubble 
+    fill(95, 168, 194);
+    noStroke();
+    rect(bx + this.w - rightW - 16, rightBY, rightW, bubbleH, 16, 16, 4, 16);
+    fill(255);
+    textAlign(LEFT, CENTER);
+    text(rightMsg, bx + this.w - rightW - 16 + bubblePadH / 2, rightBY + bubbleH / 2);
   }
 
-  // Ảnh trong tab Image
   drawImageContent() {
     if (!this.img) return;
     drawingContext.imageSmoothingEnabled = false;
-    let padding  = 12;
+    let padding  = 16;
     let areaW    = this.w - padding * 2;
-    let areaH    = this.h - 45;
+    let areaH    = this.h - TITLEBAR_HEIGHT - padding * 2;
     let imgRatio  = this.img.width / this.img.height;
     let areaRatio = areaW / areaH;
     let drawW, drawH;
     if (imgRatio > areaRatio) { drawW = areaW; drawH = drawW / imgRatio; }
     else { drawH = areaH; drawW = drawH * imgRatio; }
     let dx = floor(this.x + (this.w - drawW) / 2);
-    let dy = floor(this.y + 34 + (areaH - drawH) / 2);
+    let dy = floor(this.y + TITLEBAR_HEIGHT + padding + (areaH - drawH) / 2);
     image(this.img, dx, dy, floor(drawW), floor(drawH));
   }
 
@@ -521,7 +528,6 @@ class RetroTab {
            my > this.y && my < this.y + this.h;
   }
 
-  // Bắt đầu kéo tab
   startDrag(mx, my) {
     this.dragging = true;
     this.offsetX  = mx - this.x;
@@ -529,16 +535,14 @@ class RetroTab {
   }
 
   clickClose(mx, my) {
-    let bx = this.x + this.w - 60 + (BUTTON_SIZE + BUTTON_GAP) * 2;
-    let by = this.y + 5;
-    return mx > bx && mx < bx + BUTTON_SIZE &&
-           my > by && my < by + BUTTON_SIZE;
+    const r = this._closeRect();
+    return mx > r.x && mx < r.x + BUTTON_SIZE &&
+           my > r.y && my < r.y + BUTTON_SIZE;
   }
 }
 
 
-
-// PHẦN 7: GUIDE TEXT
+// PHẦN 7: GUIDE TEXT 
 function updateGuide() {
   if (guideState.done) { tickGuideFlicker(GUIDE_TEXT, millis()); return; }
   const now = millis();
@@ -560,7 +564,6 @@ function updateGuide() {
   }
 }
 
-// Nhấp nháy ngẫu nhiên
 function tickGuideFlicker(fullText, now) {
   if (now < guideFlicker.nextFlicker) return;
   const count = floor(random(1, 3));
@@ -569,13 +572,12 @@ function tickGuideFlicker(fullText, now) {
   guideFlicker.nextFlicker = now + guideFlicker.flickerSpeed + random(-400, 400);
 }
 
-// Guide text 
 function drawGuide() {
   if (!guideState.started || guideState.charCount === 0) return;
   push();
   textFont("Jersey 15");
   textAlign(CENTER, CENTER);
-  textSize(18);
+  textSize(35);  
   noStroke();
   const now          = millis();
   const fullText     = GUIDE_TEXT;
@@ -591,7 +593,7 @@ function drawGuide() {
     const baseAlpha    = isFlickering ? map(flickerPhase, -1, 1, 80, 200) : 255;
     fill(125, 32, 39, baseAlpha);
     const cw = textWidth(fullText[i]);
-    text(fullText[i], floor(startX + cw / 2), 36);
+    text(fullText[i], floor(startX + cw / 2), 42);
     startX += cw;
   }
   pop();
@@ -599,7 +601,41 @@ function drawGuide() {
 
 
 // PHẦN 8: MAIN BOX
-// Đếm số dòng khi wrap text
+function getMainBoxLayout() {
+  const BOX_W_FACTOR = 0.95;
+  const TEXT_SIZE    = 37;
+  const LINE_H       = TEXT_SIZE * 1.35;
+  const PAD_V        = 28;
+  const NEXT_W       = 190;
+  const NEXT_H       = 76;
+
+  const boxW      = min(width * BOX_W_FACTOR, 1500);
+  const x         = width / 2 - boxW / 2;
+  const hasNext   = nextAlpha > 0;
+  const textAreaW = hasNext ? boxW - NEXT_W - 68 - 20 : boxW - 68;
+
+  textFont("Jersey 15");
+  textSize(TEXT_SIZE);
+
+  const typed = !finalMainTextState.started
+    ? MAIN_TEXT_MESSAGES[mainTextTypingState.messageIndex].slice(0, mainTextTypingState.charCount)
+    : FINAL_MAIN_TEXT.slice(0, finalMainTextState.charCount);
+
+  const lines = max(1, countMainTextLines(typed, textAreaW));
+  const boxH  = lines * LINE_H + PAD_V * 2;
+  const y     = height - 48 - boxH;
+
+  const nextButX = x + boxW - NEXT_W / 2 - 20;
+  const nextButY = y + boxH / 2;
+
+  return {
+    boxW, boxH, x, y,
+    textAreaW, typed, TEXT_SIZE, LINE_H, PAD_V,
+    NEXT_W, NEXT_H,
+    nextButX, nextButY
+  };
+}
+
 function countMainTextLines(str, maxW) {
   if (!str || str.length === 0) return 1;
   const words  = str.split(" ");
@@ -613,7 +649,6 @@ function countMainTextLines(str, maxW) {
   return lines;
 }
 
-// Update main text typing
 function updateMainText() {
   const now = millis();
   if (mainTextTypingState.finishedAll) return;
@@ -646,8 +681,6 @@ function updateMainText() {
   }
 }
 
-// Update final main text typing
-// Gõ FINAL_MAIN_TEXT sau FINAL_MAIN_TEXT_DELAY 
 function updateFinalMainTextTyping() {
   if (!mainTextTypingState.finishedAll) return;
   if (finalMainTextState.completed) return;
@@ -674,83 +707,59 @@ function updateFinalMainTextTyping() {
   }
 }
 
-// Vẽ toàn bộ Main Box
 function drawMainBox() {
-  const boxW = min(width * 0.78, 820);
-  const x    = width / 2 - boxW / 2;
-  const padV = 16;
+  const L = getMainBoxLayout();
+  const { boxW, boxH, x, y, textAreaW, typed,
+          nextButX, nextButY, NEXT_W, NEXT_H } = L;
 
-  // Chiều rộng vùng text
-  const textAreaW = nextAlpha > 0 ? boxW - 100 - 56 - 16 : boxW - 56;
-
-  textFont("Jersey 15");
-  textSize(20);
-  const lineH = 20 * 1.4;
-
-  // Text đang hiển thị
-  const typed = !finalMainTextState.started
-    ? MAIN_TEXT_MESSAGES[mainTextTypingState.messageIndex].slice(0, mainTextTypingState.charCount)
-    : FINAL_MAIN_TEXT.slice(0, finalMainTextState.charCount);
-
-  const lines = max(1, countMainTextLines(typed, textAreaW));
-  const boxH  = lines * lineH + padV * 2;
-  const y     = height - 40 - boxH;
-
-  // Tọa độ nút THE END
-  const nextButW = 100, nextButH = 40;
-  const nextButX = x + boxW - nextButW / 2 - 16;
-  const nextButY = y + boxH / 2;
-
-  // Fade in nút THE END
   if (nextAppear !== null) {
     const now = millis();
     if (now >= nextAppear) nextAlpha = min(255, nextAlpha + 5);
   }
 
-  // Hover cursor nút THE END
   if (nextAlpha > 200) {
     const hoverNextBut =
-      mouseX >= nextButX - nextButW / 2 && mouseX <= nextButX + nextButW / 2 &&
-      mouseY >= nextButY - nextButH / 2 && mouseY <= nextButY + nextButH / 2;
+      mouseX >= nextButX - NEXT_W / 2 && mouseX <= nextButX + NEXT_W / 2 &&
+      mouseY >= nextButY - NEXT_H / 2 && mouseY <= nextButY + NEXT_H / 2;
     if (hoverNextBut) cursor(HAND);
   }
 
   push();
 
-  // Khung main box
   fill(252, 235, 222);
   stroke(95, 168, 194);
-  strokeWeight(1.5);
-  rect(floor(x), floor(y), boxW, boxH, 6);
+  strokeWeight(3);
+  rect(floor(x), floor(y), boxW, boxH, 8);
 
-  // Tag box 
+  // Tag
+  const TAG_W = 180, TAG_H = 58;
+  const tagX  = floor(x) + 18;
+  const tagCX = tagX + TAG_W / 2;
   noStroke();
   fill(95, 168, 194);
-  rect(floor(x) + 18, floor(y) - 18, 90, 28, 5);
+  rect(tagX, floor(y) - 28, TAG_W, TAG_H, 8);
   fill(125, 32, 39);
   textAlign(CENTER, CENTER);
   textFont("Jersey 15");
-  textSize(22);
-  text("Trace", floor(x) + 63, floor(y) - 4);
+  textSize(45);
+  text("Trace", tagCX, floor(y) - 28 + TAG_H / 2);
 
-  // Main text / Final text
   fill(125, 32, 39);
   noStroke();
   textAlign(LEFT, CENTER);
   textFont("Jersey 15");
-  textSize(20);
-  text(typed, floor(x) + 28, floor(y) + boxH / 2, textAreaW);
+  textSize(L.TEXT_SIZE);
+  text(typed, floor(x) + 32, floor(y) + boxH / 2, textAreaW);
 
-  // Nút THE END
   if (nextAlpha > 0) {
     fill(153, 148, 54, nextAlpha);
     noStroke();
     rectMode(CENTER);
-    rect(floor(nextButX), floor(nextButY), nextButW, nextButH, 6);
+    rect(floor(nextButX), floor(nextButY), NEXT_W, NEXT_H, 6);
     fill(125, 32, 39, nextAlpha);
     textAlign(CENTER, CENTER);
     textFont("Jersey 15");
-    textSize(28);
+    textSize(54);
     text("THE END", floor(nextButX), floor(nextButY) - 1);
   }
 
@@ -758,7 +767,7 @@ function drawMainBox() {
 }
 
 
-// ██ PHẦN 9 — UI ICONS 
+// PHẦN 9: UI ICONS 
 function getIconRects() {
   const musicX = width - ICON_MARGIN - ICON_SIZE / 2;
   const camX   = width - ICON_MARGIN - ICON_SIZE - ICON_MARGIN - ICON_SIZE / 2;
@@ -779,35 +788,37 @@ function drawUIIcons() {
   push();
   rectMode(CENTER);
 
-  // Icon camera
-  stroke(95, 168, 194); strokeWeight(1.5); fill(252, 235, 222);
+  stroke(95, 168, 194); strokeWeight(2.5); fill(252, 235, 222);
   rect(floor(icons.cam.x), floor(icons.cam.y), ICON_SIZE, ICON_SIZE, 6);
   let camX = floor(icons.cam.x), camY = floor(icons.cam.y) + 2;
-  noFill(); stroke(125, 32, 39); strokeWeight(1.4);
+  noFill(); stroke(125, 32, 39); strokeWeight(2.3);
   rectMode(CENTER);
-  rect(camX, camY, 20, 14, 2);
-  circle(camX, camY, 8);
-  noFill(); stroke(125, 32, 39);
-  rect(camX - 4, camY - 9, 8, 4, 1);
+  rect(camX, camY, 32, 22, 5);
+  circle(camX, camY, 14);
+  noFill(); stroke(127, 34, 41);
+  rect(camX - 8, camY - 14, 13, 7, 3);
 
-  // Icon music
-  stroke(95, 168, 194); strokeWeight(1.5); fill(252, 235, 222);
+  stroke(95, 168, 194); strokeWeight(2.5); fill(252, 235, 222);
   rectMode(CENTER);
   rect(floor(icons.music.x), floor(icons.music.y), ICON_SIZE, ICON_SIZE, 6);
   let musicX = floor(icons.music.x) - 5, musicY = floor(icons.music.y);
-  noFill(); stroke(125, 32, 39); strokeWeight(1.4);
+  noFill(); stroke(125, 32, 39); strokeWeight(2.3);
   beginShape();
-  vertex(musicX-5, musicY-4); vertex(musicX, musicY-4); vertex(musicX+5, musicY-8);
-  vertex(musicX+5, musicY+8); vertex(musicX, musicY+4); vertex(musicX-5, musicY+4);
+  vertex(musicX-8, musicY-6);
+  vertex(musicX,   musicY-6);
+  vertex(musicX+8, musicY-12);
+  vertex(musicX+8, musicY+12);
+  vertex(musicX,   musicY+6);
+  vertex(musicX-8, musicY+6);
   endShape(CLOSE);
   if (!isMuted) {
-    noFill(); stroke(125, 32, 39); strokeWeight(1.2);
-    arc(musicX+9, musicY, 8,  12, -PI*0.5, PI*0.5);
-    arc(musicX+9, musicY, 14, 20, -PI*0.5, PI*0.5);
+    noFill(); stroke(125, 32, 39); strokeWeight(2.3);
+    arc(musicX+13, musicY, 12, 18, -PI*0.5, PI*0.5);
+    arc(musicX+13, musicY, 20, 28, -PI*0.5, PI*0.5);
   } else {
-    stroke(95, 168, 194); strokeWeight(1.8);
-    line(musicX+7, musicY-7, musicX+14, musicY+7);
-    line(musicX+14, musicY-7, musicX+7, musicY+7);
+    stroke(95, 168, 194); strokeWeight(2.3);
+    line(musicX+10, musicY-10, musicX+20, musicY+10);
+    line(musicX+20, musicY-10, musicX+10, musicY+10);
   }
   pop();
 }
@@ -819,7 +830,6 @@ function saveScreenshot() {
 
 // PHẦN 10: MOUSE EVENTS
 function mousePressed() {
-  // Click icon camera / music
   const icons = getIconRects();
   if (mouseX >= icons.cam.x   - ICON_SIZE/2 && mouseX <= icons.cam.x   + ICON_SIZE/2 &&
       mouseY >= icons.cam.y   - ICON_SIZE/2 && mouseY <= icons.cam.y   + ICON_SIZE/2) {
@@ -830,34 +840,18 @@ function mousePressed() {
     setMusicMute(!isMuted); return;
   }
 
-  // Click nút THE END → quay về index.html
   if (nextAlpha > 200) {
-    const boxW      = min(width * 0.78, 820);
-    const x         = width / 2 - boxW / 2;
-    const padV      = 16;
-    textFont("Jersey 15");
-    textSize(20);
-    const textAreaW = boxW - 100 - 56 - 16;
-    const lineH     = 20 * 1.4;
-    const typed     = FINAL_MAIN_TEXT.slice(0, finalMainTextState.charCount);
-    const lines     = max(1, countMainTextLines(typed, textAreaW));
-    const boxH      = lines * lineH + padV * 2;
-    const y         = height - 40 - boxH;
-    const nextButW  = 100, nextButH = 40;
-    const nextButX  = x + boxW - nextButW / 2 - 16;
-    const nextButY  = y + boxH / 2;
-    if (mouseX >= nextButX - nextButW/2 && mouseX <= nextButX + nextButW/2 &&
-        mouseY >= nextButY - nextButH/2 && mouseY <= nextButY + nextButH/2) {
+    const L = getMainBoxLayout();
+    if (mouseX >= L.nextButX - L.NEXT_W / 2 && mouseX <= L.nextButX + L.NEXT_W / 2 &&
+        mouseY >= L.nextButY - L.NEXT_H / 2 && mouseY <= L.nextButY + L.NEXT_H / 2) {
       goWithFade("index.html"); return;
     }
   }
 
-  // Click nút X → đóng tab
   for (let i = tabs.length - 1; i >= 0; i--) {
     if (tabs[i].clickClose(mouseX, mouseY)) { tabs.splice(i, 1); return; }
   }
 
-  // Click vào tab → đưa lên trên cùng + bắt đầu kéo
   for (let i = tabs.length - 1; i >= 0; i--) {
     if (tabs[i].inside(mouseX, mouseY)) {
       let tab = tabs.splice(i, 1)[0];
@@ -867,7 +861,6 @@ function mousePressed() {
     }
   }
 
-  // Click vào vùng trống → tạo tab mới
   createRandomTab(mouseX, mouseY);
 }
 
