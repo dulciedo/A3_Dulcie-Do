@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loading...</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jersey+15&display=swap" rel="stylesheet">
+
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      background: rgb(252, 235, 222);
+      overflow: hidden;
+    }
+    canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+    #loading-text {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Jersey 15', monospace;
+      font-size: 32px;
+      color: rgb(153, 148, 54);
+      letter-spacing: 2px;
+      pointer-events: none;
+      z-index: 10;
+    }
+  </style>
+
+  
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div id="loading-text"></div>
+
+  <script>
+    const destination = sessionStorage.getItem("loadingDestination") || "index.html";
+
+    const FULL_TEXT = "Loading...";
+    const TYPING_INTERVAL = 100;
+    let charIndex = 0;
+    let lastTypeAt = 0;
+    let destinationReady = false;
+
+    const link = document.createElement("link");
+    link.rel = "prefetch";
+    link.href = destination;
+    document.head.appendChild(link);
+
+    fetch(destination)
+      .then(() => { destinationReady = true; })
+      .catch(() => { destinationReady = true; });
+
+    const el = document.getElementById("loading-text");
+
+    // DUST BACKGROUND
+    const canvas = document.getElementById("c");
+    const ctx = canvas.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
+
+    const BACKGROUND_DUST_DENSITY = 3500;
+    let dustParticlesBg = [];
+    let frameCount = 0;
+    let width, height;
+
+    function lerpAngle(start, end, amt) {
+      let diff = ((end - start + Math.PI) % (Math.PI * 2)) - Math.PI;
+      if (diff < -Math.PI) diff += Math.PI * 2;
+      return start + diff * amt;
+    }
+
+    function random(a, b) {
+      if (a === undefined) return Math.random();
+      if (b === undefined) return Math.random() * a;
+      return Math.random() * (b - a) + a;
+    }
+
+    function setupDustParticlesBg() {
+      dustParticlesBg = [];
+      const total = Math.max(140, Math.floor((width * height) / BACKGROUND_DUST_DENSITY));
+      for (let i = 0; i < total; i++) {
+        const sizeRoll = random();
+        const size =
+          sizeRoll < 0.62 ? 1.5 :
+          sizeRoll < 0.88 ? 3.5 :
+          random(2, 4);
+        const driftAngle = random(Math.PI * 2);
+        const driftSpeed = 0.2 - (size - 1) / (3.4 - 1) * (0.2 - 0.08);
+        dustParticlesBg.push({
+          x: random(width), y: random(height),
+          renderX: 0, renderY: 0,
+          size,
+          glowSize:    size * random(2.4, 4.8),
+          alpha:       random(75, 185),
+          driftAngle,  driftHeading: driftAngle, driftSpeed,
+          vx: Math.cos(driftAngle) * driftSpeed,
+          vy: Math.sin(driftAngle) * driftSpeed,
+          turnOffset:  random(1000), turnSpeed: random(0.001, 0.0022),
+          swayPhaseX:  random(Math.PI * 2), swayPhaseY: random(Math.PI * 2),
+          swaySpeedX:  random(0.01, 0.03),  swaySpeedY: random(0.01, 0.03),
+          swayRadiusX: random(0.3, 1.8),    swayRadiusY: random(0.6, 2.8),
+          alphaPhase:  random(Math.PI * 2), alphaSpeed: random(0.004, 0.012)
+        });
+      }
+    }
+
+    function updateDustParticlesBg() {
+      const t = frameCount;
+      for (let p of dustParticlesBg) {
+        const n = Math.abs(Math.sin(p.turnOffset * 127.1 + t * p.turnSpeed * 311.7) * 43758.5453 % 1);
+        const targetAngle = p.driftAngle + (n * 2 - 1) * 0.9;
+        p.driftHeading = lerpAngle(p.driftHeading, targetAngle, 0.04);
+        p.vx = p.vx * 0.91 + Math.cos(p.driftHeading) * p.driftSpeed * 0.09;
+        p.vy = p.vy * 0.91 + Math.sin(p.driftHeading) * p.driftSpeed * 0.09;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.renderX = p.x + Math.sin(t * p.swaySpeedX + p.swayPhaseX) * p.swayRadiusX;
+        p.renderY = p.y + Math.cos(t * p.swaySpeedY + p.swayPhaseY) * p.swayRadiusY;
+        const margin = p.glowSize * 0.5 + 4;
+        if (p.x < -margin)             p.x = width  + margin;
+        else if (p.x > width + margin)  p.x = -margin;
+        if (p.y < -margin)             p.y = height + margin;
+        else if (p.y > height + margin) p.y = -margin;
+      }
+    }
+
+    function drawDustParticlesBg() {
+      for (let p of dustParticlesBg) {
+        const alphaPulse = 0.82 + Math.sin(frameCount * p.alphaSpeed + p.alphaPhase) * 0.18;
+        const a = p.alpha * alphaPulse;
+        ctx.fillStyle = `rgba(147,174,191,${(a / 255).toFixed(3)})`;
+        ctx.fillRect(Math.floor(p.renderX), Math.floor(p.renderY), Math.floor(p.size), Math.floor(p.size));
+      }
+    }
+
+    function resizeCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      width  = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width  = Math.floor(width  * dpr);
+      canvas.height = Math.floor(height * dpr);
+      canvas.style.width  = width  + "px";
+      canvas.style.height = height + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.imageSmoothingEnabled = false;
+      setupDustParticlesBg();
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    //LOOP TEXT
+    function typeStep(now) {
+      ctx.fillStyle = "rgb(252,235,222)";
+      ctx.fillRect(0, 0, width, height);
+
+      updateDustParticlesBg();
+      drawDustParticlesBg();
+      frameCount++;
+
+      if (now - lastTypeAt >= TYPING_INTERVAL) {
+        charIndex++;
+        if (charIndex > FULL_TEXT.length) charIndex = 0;
+        el.textContent = FULL_TEXT.slice(0, charIndex);
+        lastTypeAt = now;
+        if (charIndex === FULL_TEXT.length && destinationReady) {
+          setTimeout(() => {
+            sessionStorage.removeItem("loadingDestination");
+            window.location.href = destination;
+          }, 200);
+          return;
+        }
+      }
+
+      requestAnimationFrame(typeStep);
+    }
+
+    requestAnimationFrame((now) => {
+      lastTypeAt = now;
+      requestAnimationFrame(typeStep);
+    });
+  </script>
+</body>
+</html>
