@@ -16,36 +16,34 @@ let gainNode       = null;
 let isMuted        = false;
 
 
-// BACKGROUND DUST 
-const BACKGROUND_DUST_DENSITY = 3500;
+// BACKGROUND DUST
+const BACKGROUND_DUST_DENSITY = 7000;
 
 let dustParticlesBg = [];
 
 
 // CHAR IMAGE
-const CHAR_SET  = "692035184751"; 
-const CHAR_STEP = 9;            // khoảng cách giữa các ký tự
+const CHAR_SET  = "692035184751";
+const CHAR_STEP = 8;
 
-let img;           
-let baseImg;       // bản sao gốc để rebuild 
-let charPoints = []; // mảng điểm {x, y, char, alpha} tạo thành hình
+let img;
+let baseImg;
+let charPoints = [];
 
 
 // NODES
-const NODE_COUNT = 50; // số điểm
+const NODE_COUNT = 80;
 
-let nodes      = []; // mảng chứa Node
-let redThreads = []; // mảng chứa RedThread
+let nodes      = [];
+let redThreads = [];
 
 
 // GUIDE TEXT 
 const GUIDE_TEXT_1 = "click and hold to cut the red threads";
 
-// Timing
-const GUIDE_TYPING_SPEED = 70;   // ms/ký tự
-const GUIDE_1_DELAY      = 800;  // ms chờ sau khi vào trang mới bắt đầu gõ
+const GUIDE_TYPING_SPEED = 70;
+const GUIDE_1_DELAY      = 800;
 
-// State guide typing
 let guideState = {
   charCount:  0,
   lastType:   0,
@@ -54,7 +52,6 @@ let guideState = {
   done:       false
 };
 
-// State flicker 
 let guideFlicker = {
   indices:      [],
   nextFlicker:  0,
@@ -62,18 +59,16 @@ let guideFlicker = {
 };
 
 
-// MAIN BOX — MAIN TEXT 
+// MAIN BOX 
 const MAIN_TEXT_MESSAGES = [
   "\u201cThe red thread\u201d is what connects people to one another, and through it, memories are created for each of us...",
   "Many people believe that if this \u201cred thread\u201d is cut, the relationship between two people will completely end, and they will never meet again...",
   "So try cutting that thread\u2026"
 ];
 
-// Timing 
-const MAIN_TEXT_TYPING_SPEED = 55;   
-const MAIN_TEXT_DELAY        = 2000; 
+const MAIN_TEXT_TYPING_SPEED = 55;
+const MAIN_TEXT_DELAY        = 2000;
 
-// State typing
 let mainTextTypingState = {
   messageIndex:  0,
   charCount:     0,
@@ -84,12 +79,11 @@ let mainTextTypingState = {
 };
 
 
-// MAIN BOX — FINAL TEXT + NEXT BUT 
-const FINAL_MAIN_TEXT      = "But even when the thread is broken, it doesn't truly disappear, it still lingers somewhere, entangled in another thread.";
-const FINAL_MAIN_TEXT_DELAY = 5000; 
-const NEXT_DELAY            = 2200; 
+// FINAL TEXT + NEXT BUT
+const FINAL_MAIN_TEXT       = "But even when the thread is broken, it doesn't truly disappear, it still lingers somewhere, entangled in another thread.";
+const FINAL_MAIN_TEXT_DELAY = 5000;
+const NEXT_DELAY            = 2200;
 
-// State final text
 let finalMainTextState = {
   started:     false,
   charCount:   0,
@@ -98,13 +92,13 @@ let finalMainTextState = {
   completedAt: null
 };
 
-let nextAlpha  = 0;    // độ trong suốt nút NEXT 
-let nextAppear = null; // millis() thời điểm bắt đầu fade in NEXT
+let nextAlpha  = 0;
+let nextAppear = null;
 
 
-// UI ICONS 
-const ICON_SIZE   = 38;
-const ICON_MARGIN = 14;
+// UI ICONS
+const ICON_SIZE   = 60;
+const ICON_MARGIN = 18;
 const ICON_TOP    = 16;
 
 
@@ -173,6 +167,7 @@ function setMusicMute(muted) {
 }
 
 window.addEventListener("beforeunload", saveMusicTime);
+
 
 // PHẦN 3: PAGE TRANSITION OVERLAY
 function setupTransitionCSS() {
@@ -271,43 +266,37 @@ function draw() {
   cursor(ARROW);
   drawingContext.imageSmoothingEnabled = false;
 
-  // Nền pixel 
   updateDustParticlesBg();
   drawDustParticlesBg();
 
-  // Hình số
   drawCharImage();
 
-  // Sợi chỉ đỏ + nodes
   updateRedThreads();
   drawRedThreads();
   drawNodes();
 
-  // Guide text
   updateGuide();
   drawGuide();
 
-  // Main box
   updateMainText();
   updateFinalMainTextTyping();
   drawMainBox();
 
-  // UI Icons
   drawUIIcons();
 }
 
-// PHẦN 5: BACKGROUND DUST
+// PHẦN 5: BACKGROUND DUST 
 function setupDustParticlesBg() {
   dustParticlesBg = [];
-  const total = max(140, floor((width * height) / BACKGROUND_DUST_DENSITY));
+  const total = max(80, floor((width * height) / BACKGROUND_DUST_DENSITY));
   for (let i = 0; i < total; i++) {
     const sizeRoll = random();
     const size =
-      sizeRoll < 0.62 ? 1.5 :
-      sizeRoll < 0.88 ? 3.5 :
-      random(2, 4);
+      sizeRoll < 0.62 ? 3 :
+      sizeRoll < 0.88 ? 7 :
+      random(4, 8);
     const driftAngle = random(TWO_PI);
-    const driftSpeed = map(size, 1, 3.4, 0.2, 0.08);
+    const driftSpeed = map(size, 2, 8, 0.12, 0.05);
     dustParticlesBg.push({
       x: random(width), y: random(height),
       renderX: 0, renderY: 0,
@@ -317,11 +306,11 @@ function setupDustParticlesBg() {
       driftAngle,  driftHeading: driftAngle, driftSpeed,
       vx: cos(driftAngle) * driftSpeed,
       vy: sin(driftAngle) * driftSpeed,
-      turnOffset:  random(1000), turnSpeed: random(0.001, 0.0022),
+      turnOffset:  random(1000), turnSpeed: random(0.0005, 0.0015),
       swayPhaseX:  random(TWO_PI), swayPhaseY: random(TWO_PI),
-      swaySpeedX:  random(0.01, 0.03), swaySpeedY: random(0.01, 0.03),
-      swayRadiusX: random(0.3, 1.8),   swayRadiusY: random(0.6, 2.8),
-      alphaPhase:  random(TWO_PI), alphaSpeed: random(0.004, 0.012)
+      swaySpeedX:  random(0.006, 0.018), swaySpeedY: random(0.006, 0.018),
+      swayRadiusX: random(0.2, 0.8),   swayRadiusY: random(0.3, 1.2),
+      alphaPhase:  random(TWO_PI), alphaSpeed: random(0.002, 0.006)
     });
   }
 }
@@ -331,9 +320,9 @@ function updateDustParticlesBg() {
   for (let p of dustParticlesBg) {
     const targetAngle =
       p.driftAngle + map(noise(p.turnOffset, t * p.turnSpeed), 0, 1, -0.9, 0.9);
-    p.driftHeading = lerpAngle(p.driftHeading, targetAngle, 0.04);
-    p.vx = lerp(p.vx, cos(p.driftHeading) * p.driftSpeed, 0.09);
-    p.vy = lerp(p.vy, sin(p.driftHeading) * p.driftSpeed, 0.09);
+    p.driftHeading = lerpAngle(p.driftHeading, targetAngle, 0.02);
+    p.vx = lerp(p.vx, cos(p.driftHeading) * p.driftSpeed, 0.06);
+    p.vy = lerp(p.vy, sin(p.driftHeading) * p.driftSpeed, 0.06);
     p.x += p.vx;
     p.y += p.vy;
     p.renderX = p.x + sin(t * p.swaySpeedX + p.swayPhaseX) * p.swayRadiusX;
@@ -359,7 +348,6 @@ function drawDustParticlesBg() {
 }
 
 // PHẦN 6: CHAR IMAGE
-// Scan ảnh gốc PIXEL ,SỐ
 function buildCharImage() {
   charPoints = [];
   let srcW = baseImg.width, srcH = baseImg.height;
@@ -396,23 +384,19 @@ function buildCharImage() {
   }
 }
 
-// Vẽ từng điểm số lên canvas
 function drawCharImage() {
   push();
   noStroke();
   textSize(9);
   textFont("monospace");
   for (let p of charPoints) {
-    fill(95, 168, 194, p.alpha);
+    fill(34, 103, 119, p.alpha);
     text(p.char, p.x, p.y);
   }
   pop();
 }
 
 // PHẦN 7: NODES & RED THREADS
-
-// Node 
-// Tạo NODE_COUNT ngẫu nhiên
 function createNodes() {
   nodes = [];
   for (let i = 0; i < NODE_COUNT; i++) {
@@ -426,12 +410,10 @@ class Node {
   display() {
     noStroke();
     fill(95, 168, 194);
-    circle(this.x, this.y, 3.5);
+    circle(this.x, this.y, 4);
   }
 }
 
-// RedThread 
-// Tạo các sợi chỉ đỏ nối ngẫu nhiên
 function createThreads() {
   redThreads = [];
   for (let i = 0; i < nodes.length; i++) {
@@ -441,7 +423,6 @@ function createThreads() {
       if (a !== b) {
         redThreads.push(new RedThread(a, b, 0));
         redThreads.push(new RedThread(a, b, 1));
-        redThreads.push(new RedThread(a, b, 2));
       }
     }
   }
@@ -450,7 +431,7 @@ function createThreads() {
 class RedThread {
   constructor(a, b, type) {
     this.a = a; this.b = b; this.type = type;
-    this.breakable    = random() < 0.35; // 35% sợi có thể cắt
+    this.breakable    = random() < 0.35;
     this.broken       = false;
     this.wave         = 0;
     this.waveTarget   = 0;
@@ -458,63 +439,73 @@ class RedThread {
     this.fallOffset   = 0;
     this.fallVelocity = 0;
     this.seed         = random(1000);
-    this.cutPoint     = random(0.2, 0.8); // vị trí cắt
+    this.cutPoint     = random(0.2, 0.8);
+
+    // Cache midpoint để tránh tính lại mỗi frame
+    this._mx = (a.x + b.x) * 0.5;
+    this._my = (a.y + b.y) * 0.5;
   }
 
   update() {
-    let mx = (this.a.x + this.b.x) * 0.5;
-    let my = (this.a.y + this.b.y) * 0.5;
-    let d  = dist(mouseX, mouseY, mx, my);
+    const mx = this._mx;
+    const my = this._my;
+    const dx = mouseX - mx;
+    const dy = mouseY - my;
+    const distSq = dx * dx + dy * dy;
 
-    // Interact khi chuột gần
-    this.waveTarget = d < 120 ? map(d, 0, 120, 18, 0) : 0;
-    this.wave = lerp(this.wave, this.waveTarget, 0.12);
+    // Vùng hover mouse
+    if (distSq < 32400) {
+      const d = sqrt(distSq);
+      this.waveTarget = d < 180 ? map(d, 0, 180, 60, 0) : 0;
 
-    // Kéo giãn khi giữ chuột
-    if (mouseIsPressed && d < 80 && !this.broken) {
-      this.dragOffset = lerp(this.dragOffset, 70, 0.15);
+      if (mouseIsPressed && distSq < 12100 && !this.broken) {
+        this.dragOffset = lerp(this.dragOffset, 90, 0.22);
+      } else {
+        this.dragOffset = lerp(this.dragOffset, 0, 0.06);
+      }
     } else {
-      this.dragOffset = lerp(this.dragOffset, 0, 0.06);
+      this.waveTarget = 0;
+      // Khi xa chuột
+      if (this.dragOffset > 0.1) this.dragOffset = lerp(this.dragOffset, 0, 0.06);
     }
 
-    // Cắt đứt khi kéo
-    if (this.breakable && this.dragOffset > 55 && !this.broken) {
+    this.wave = lerp(this.wave, this.waveTarget, 0.18);
+
+    if (this.breakable && this.dragOffset > 42 && !this.broken) {
       this.broken       = true;
       this.fallOffset   = 0;
-      this.fallVelocity = random(1, 2.5);
+      this.fallVelocity = random(10.5, 12.5);
     }
 
-    // Rơi sau khi đứt
     if (this.broken) {
-      this.fallVelocity += 0.08;
+      this.fallVelocity += 0.75;
       this.fallOffset   += this.fallVelocity;
     }
   }
 
   display() {
-    stroke(160, 37, 52);
-    strokeWeight(0.45);
+    // Threads màu 
+    stroke(190, 80, 90, 110);
+    strokeWeight(2);
     noFill();
     let ax = this.a.x, ay = this.a.y;
     let bx = this.b.x, by = this.b.y;
-    let mx = (ax + bx) * 0.5, my = (ay + by) * 0.5;
+    let mx = this._mx, my = this._my;
     let wave = sin(frameCount * 0.12 + this.seed) * this.wave;
     let drag = this.dragOffset;
 
     if (!this.broken) {
-      // 3 đường cong khác nhau
       if      (this.type === 0) bezier(ax, ay, mx, my + wave + drag*0.2, mx, my - wave + drag*0.2, bx, by);
       else if (this.type === 1) bezier(ax, ay, mx, my - 20 + wave + drag, mx, my + 20 - wave + drag, bx, by);
       else                      bezier(ax, ay, mx, my + 45 + wave + drag, mx, my + 45 - wave + drag, bx, by);
     } else {
-      // 2 đoạn rơi sau khi đứt
       let cutT    = this.cutPoint;
       let cutX    = lerp(ax, bx, cutT);
       let cutY    = lerp(ay, by, cutT);
       let leftLen  = dist(ax, ay, cutX, cutY);
       let rightLen = dist(cutX, cutY, bx, by);
-      let leftSag  = min(leftLen  * 0.9, this.fallOffset);
-      let rightSag = min(rightLen * 0.9, this.fallOffset);
+      let leftSag  = min(leftLen  * 1.4, this.fallOffset);
+      let rightSag = min(rightLen * 1.4, this.fallOffset);
       bezier(ax, ay, ax, ay + leftSag*0.5, cutX - leftLen*0.15, cutY + leftSag, cutX, cutY + leftSag);
       bezier(cutX, cutY + rightSag, cutX + rightLen*0.15, cutY + rightSag, bx, by + rightSag*0.5, bx, by);
     }
@@ -526,7 +517,7 @@ function drawRedThreads()   { for (let t of redThreads) t.display(); }
 function drawNodes()        { for (let n of nodes) n.display(); }
 
 
-// PHẦN 8: GUIDE TEXT
+// PHẦN 8: GUIDE TEXT 
 function updateGuide() {
   if (guideState.done) { tickGuideFlicker(GUIDE_TEXT_1, millis()); return; }
   const now = millis();
@@ -548,7 +539,6 @@ function updateGuide() {
   }
 }
 
-// Nhấp nháy ngẫu nhiên
 function tickGuideFlicker(fullText, now) {
   if (now < guideFlicker.nextFlicker) return;
   const count = floor(random(1, 3));
@@ -557,13 +547,12 @@ function tickGuideFlicker(fullText, now) {
   guideFlicker.nextFlicker = now + guideFlicker.flickerSpeed + random(-400, 400);
 }
 
-// Guide text 
 function drawGuide() {
   if (!guideState.started || guideState.charCount === 0) return;
   push();
   textFont("Jersey 15");
   textAlign(CENTER, CENTER);
-  textSize(18);
+  textSize(35);   
   noStroke();
   const now          = millis();
   const fullText     = GUIDE_TEXT_1;
@@ -579,15 +568,49 @@ function drawGuide() {
     const baseAlpha    = isFlickering ? map(flickerPhase, -1, 1, 80, 200) : 255;
     fill(125, 32, 39, baseAlpha);
     const cw = textWidth(fullText[i]);
-    text(fullText[i], floor(startX + cw / 2), 36);
+    text(fullText[i], floor(startX + cw / 2), 42);
     startX += cw;
   }
   pop();
 }
 
 
-// ██ PHẦN 9 — MAIN BOX
-// Đếm số dòng khi wrap text
+// PHẦN 9: MAIN BOX
+function getMainBoxLayout() {
+  const BOX_W_FACTOR = 0.95;
+  const TEXT_SIZE    = 37;
+  const LINE_H       = TEXT_SIZE * 1.35;
+  const PAD_V        = 28;
+  const NEXT_W       = 190;
+  const NEXT_H       = 76;
+
+  const boxW      = min(width * BOX_W_FACTOR, 1500);
+  const x         = width / 2 - boxW / 2;
+  const hasNext   = nextAlpha > 0;
+  const textAreaW = hasNext ? boxW - NEXT_W - 68 - 20 : boxW - 68;
+
+  textFont("Jersey 15");
+  textSize(TEXT_SIZE);
+
+  const typed = !finalMainTextState.started
+    ? MAIN_TEXT_MESSAGES[mainTextTypingState.messageIndex].slice(0, mainTextTypingState.charCount)
+    : FINAL_MAIN_TEXT.slice(0, finalMainTextState.charCount);
+
+  const lines = max(1, countMainTextLines(typed, textAreaW));
+  const boxH  = lines * LINE_H + PAD_V * 2;
+  const y     = height - 48 - boxH;
+
+  const nextButX = x + boxW - NEXT_W / 2 - 20;
+  const nextButY = y + boxH / 2;
+
+  return {
+    boxW, boxH, x, y,
+    textAreaW, typed, TEXT_SIZE, LINE_H, PAD_V,
+    NEXT_W, NEXT_H,
+    nextButX, nextButY
+  };
+}
+
 function countMainTextLines(str, maxW) {
   if (!str || str.length === 0) return 1;
   const words  = str.split(" ");
@@ -601,7 +624,6 @@ function countMainTextLines(str, maxW) {
   return lines;
 }
 
-// Update main text typing
 function updateMainText() {
   const now = millis();
   if (mainTextTypingState.finishedAll) return;
@@ -634,8 +656,6 @@ function updateMainText() {
   }
 }
 
-// Update final main text typing
-// Gõ FINAL_MAIN_TEXT sau FINAL_MAIN_TEXT_DELAY
 function updateFinalMainTextTyping() {
   if (!mainTextTypingState.finishedAll) return;
   if (finalMainTextState.completed) return;
@@ -662,83 +682,59 @@ function updateFinalMainTextTyping() {
   }
 }
 
-// Vẽ toàn bộ Main Box
 function drawMainBox() {
-  const boxW = min(width * 0.78, 820);
-  const x    = width / 2 - boxW / 2;
-  const padV = 16;
+  const L = getMainBoxLayout();
+  const { boxW, boxH, x, y, textAreaW, typed,
+          nextButX, nextButY, NEXT_W, NEXT_H } = L;
 
-  // Chiều rộng vùng text
-  const textAreaW = nextAlpha > 0 ? boxW - 100 - 56 - 16 : boxW - 56;
-
-  textFont("Jersey 15");
-  textSize(20);
-  const lineH = 20 * 1.4;
-
-  // Text đang hiển thị
-  const typed = !finalMainTextState.started
-    ? MAIN_TEXT_MESSAGES[mainTextTypingState.messageIndex].slice(0, mainTextTypingState.charCount)
-    : FINAL_MAIN_TEXT.slice(0, finalMainTextState.charCount);
-
-  const lines = max(1, countMainTextLines(typed, textAreaW));
-  const boxH  = lines * lineH + padV * 2;
-  const y     = height - 40 - boxH;
-
-  // Tọa độ next but
-  const nextButW = 100, nextButH = 40;
-  const nextButX = x + boxW - nextButW / 2 - 16;
-  const nextButY = y + boxH / 2;
-
-  // Fade in nút NEXT
   if (nextAppear !== null) {
     const now = millis();
     if (now >= nextAppear) nextAlpha = min(255, nextAlpha + 5);
   }
 
-  // Hover cursor next but
   if (nextAlpha > 200) {
     const hoverNextBut =
-      mouseX >= nextButX - nextButW / 2 && mouseX <= nextButX + nextButW / 2 &&
-      mouseY >= nextButY - nextButH / 2 && mouseY <= nextButY + nextButH / 2;
+      mouseX >= nextButX - NEXT_W / 2 && mouseX <= nextButX + NEXT_W / 2 &&
+      mouseY >= nextButY - NEXT_H / 2 && mouseY <= nextButY + NEXT_H / 2;
     if (hoverNextBut) cursor(HAND);
   }
 
   push();
 
-  // Khung main box
   fill(252, 235, 222);
   stroke(95, 168, 194);
-  strokeWeight(1.5);
-  rect(floor(x), floor(y), boxW, boxH, 6);
+  strokeWeight(3);
+  rect(floor(x), floor(y), boxW, boxH, 8);
 
-  // Tag box 
+  // Tag 
+  const TAG_W = 180, TAG_H = 58;
+  const tagX  = floor(x) + 18;
+  const tagCX = tagX + TAG_W / 2;
   noStroke();
   fill(95, 168, 194);
-  rect(floor(x) + 18, floor(y) - 18, 90, 28, 5);
+  rect(tagX, floor(y) - 28, TAG_W, TAG_H, 8);
   fill(125, 32, 39);
   textAlign(CENTER, CENTER);
   textFont("Jersey 15");
-  textSize(22);
-  text("Thread", floor(x) + 63, floor(y) - 4);
+  textSize(45);
+  text("Thread", tagCX, floor(y) - 28 + TAG_H / 2);
 
-  // Main text / Final text
   fill(125, 32, 39);
   noStroke();
   textAlign(LEFT, CENTER);
   textFont("Jersey 15");
-  textSize(20);
-  text(typed, floor(x) + 28, floor(y) + boxH / 2, textAreaW);
+  textSize(L.TEXT_SIZE);
+  text(typed, floor(x) + 32, floor(y) + boxH / 2, textAreaW);
 
-  // Next but
   if (nextAlpha > 0) {
     fill(153, 148, 54, nextAlpha);
     noStroke();
     rectMode(CENTER);
-    rect(floor(nextButX), floor(nextButY), nextButW, nextButH, 6);
+    rect(floor(nextButX), floor(nextButY), NEXT_W, NEXT_H, 6);
     fill(125, 32, 39, nextAlpha);
     textAlign(CENTER, CENTER);
     textFont("Jersey 15");
-    textSize(28);
+    textSize(54);
     text("NEXT", floor(nextButX), floor(nextButY) - 1);
   }
 
@@ -746,7 +742,7 @@ function drawMainBox() {
 }
 
 
-// PHẦN 10: UI ICONS
+// PHẦN 10: UI ICONS — size 60, khớp với orbitals
 function getIconRects() {
   const musicX = width - ICON_MARGIN - ICON_SIZE / 2;
   const camX   = width - ICON_MARGIN - ICON_SIZE - ICON_MARGIN - ICON_SIZE / 2;
@@ -767,35 +763,39 @@ function drawUIIcons() {
   push();
   rectMode(CENTER);
 
-  // Icon camera
-  stroke(95, 168, 194); strokeWeight(1.5); fill(252, 235, 222);
+  stroke(95, 168, 194); strokeWeight(2.5); fill(252, 235, 222);
   rect(floor(icons.cam.x), floor(icons.cam.y), ICON_SIZE, ICON_SIZE, 6);
   let camX = floor(icons.cam.x), camY = floor(icons.cam.y) + 2;
-  noFill(); stroke(125, 32, 39); strokeWeight(1.4);
+  noFill(); stroke(125, 32, 39); strokeWeight(2.3);
   rectMode(CENTER);
-  rect(camX, camY, 20, 14, 2);
-  circle(camX, camY, 8);
-  noFill(); stroke(125, 32, 39);
-  rect(camX - 4, camY - 9, 8, 4, 1);
+  rect(camX, camY, 32, 22, 5); //thân máy
+  circle(camX, camY, 14); //ống kính
+  noFill(); stroke(127, 34, 41);
+  rect(camX -  8, camY - 14, 13, 7, 3);
 
-  // Icon music
-  stroke(95, 168, 194); strokeWeight(1.5); fill(252, 235, 222);
+  stroke(95, 168, 194); strokeWeight(2.5); fill(252, 235, 222);
   rectMode(CENTER);
   rect(floor(icons.music.x), floor(icons.music.y), ICON_SIZE, ICON_SIZE, 6);
   let musicX = floor(icons.music.x) - 5, musicY = floor(icons.music.y);
-  noFill(); stroke(125, 32, 39); strokeWeight(1.4);
+  noFill(); stroke(125, 32, 39); strokeWeight(2.3);
   beginShape();
-  vertex(musicX-5, musicY-4); vertex(musicX, musicY-4); vertex(musicX+5, musicY-8);
-  vertex(musicX+5, musicY+8); vertex(musicX, musicY+4); vertex(musicX-5, musicY+4);
+  vertex(musicX-8, musicY-6);
+  vertex(musicX,   musicY-6);
+  vertex(musicX+8, musicY-12);
+  vertex(musicX+8, musicY+12);
+  vertex(musicX,   musicY+6);
+  vertex(musicX-8, musicY+6);
   endShape(CLOSE);
   if (!isMuted) {
-    noFill(); stroke(125, 32, 39); strokeWeight(1.2);
-    arc(musicX+9, musicY, 8,  12, -PI*0.5, PI*0.5);
-    arc(musicX+9, musicY, 14, 20, -PI*0.5, PI*0.5);
+    //sóng âm
+    noFill(); stroke(125, 32, 39); strokeWeight(2.3);
+    arc(musicX+13, musicY, 12, 18, -PI*0.5, PI*0.5);
+    arc(musicX+13, musicY, 20, 28, -PI*0.5, PI*0.5);
   } else {
-    stroke(95, 168, 194); strokeWeight(1.8);
-    line(musicX+7, musicY-7, musicX+14, musicY+7);
-    line(musicX+14, musicY-7, musicX+7, musicY+7);
+    // X câm
+    stroke(95, 168, 194); strokeWeight(2.3);
+    line(musicX+10, musicY-10, musicX+20, musicY+10);
+    line(musicX+20, musicY-10, musicX+10, musicY+10);
   }
   pop();
 }
@@ -807,7 +807,6 @@ function saveScreenshot() {
 
 // PHẦN 11: MOUSE EVENTS
 function mousePressed() {
-  // Click icon camera / music
   const icons = getIconRects();
   if (mouseX >= icons.cam.x   - ICON_SIZE/2 && mouseX <= icons.cam.x   + ICON_SIZE/2 &&
       mouseY >= icons.cam.y   - ICON_SIZE/2 && mouseY <= icons.cam.y   + ICON_SIZE/2) {
@@ -818,24 +817,10 @@ function mousePressed() {
     setMusicMute(!isMuted); return;
   }
 
-  // Click nút NEXT → chuyển sang sketch3
   if (nextAlpha > 200) {
-    const boxW      = min(width * 0.78, 820);
-    const x         = width / 2 - boxW / 2;
-    const padV      = 16;
-    textFont("Jersey 15");
-    textSize(20);
-    const textAreaW = boxW - 100 - 56 - 16;
-    const lineH     = 20 * 1.4;
-    const typed     = FINAL_MAIN_TEXT.slice(0, finalMainTextState.charCount);
-    const lines     = max(1, countMainTextLines(typed, textAreaW));
-    const boxH      = lines * lineH + padV * 2;
-    const y         = height - 40 - boxH;
-    const nextButW  = 100, nextButH = 40;
-    const nextButX  = x + boxW - nextButW / 2 - 16;
-    const nextButY  = y + boxH / 2;
-    if (mouseX >= nextButX - nextButW/2 && mouseX <= nextButX + nextButW/2 &&
-        mouseY >= nextButY - nextButH/2 && mouseY <= nextButY + nextButH/2) {
+    const L = getMainBoxLayout();
+    if (mouseX >= L.nextButX - L.NEXT_W / 2 && mouseX <= L.nextButX + L.NEXT_W / 2 &&
+        mouseY >= L.nextButY - L.NEXT_H / 2 && mouseY <= L.nextButY + L.NEXT_H / 2) {
       goViaLoading("sketch3.html"); return;
     }
   }
